@@ -9,5 +9,6 @@
 			<attribute name="javadoc_location" value="jar:platform:/resource/BeBoltz/lib/mnist-tools.jar!/"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="lib" path="lib/jblas-1.2.0.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
