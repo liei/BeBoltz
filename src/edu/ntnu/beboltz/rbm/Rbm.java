@@ -157,4 +157,27 @@ public class Rbm {
 		DoubleMatrix visibleActivation = propup(visibleSample);
 		return toStochasticBinaryVector(visibleActivation);
 	}
+	
+	
+	/**
+	 * One step of Gibbs sampling, starting from visible layer.
+	 * @param sample of visible layer
+	 * @return activation of visible layer
+	 */
+	public DoubleMatrix gibbsVisibleHiddenVisible(DoubleMatrix visibleLayerSample) {
+		DoubleMatrix hiddenLayerSample = sampleHiddenGivenVisible(visibleLayerSample);
+		DoubleMatrix visibleActivation = sampleVisibleGivenHidden(hiddenLayerSample);
+		return visibleActivation;
+	}
+	
+	/**
+	 * One step of Gibbs sampling, starting from hidden layer.
+	 * @param sample of hidden layer
+	 * @return activation of visible layer
+	 */
+	public DoubleMatrix gibbsHiddenVisibleHidden(DoubleMatrix hiddenLayerSample) {
+		DoubleMatrix visibleLayerSample = sampleVisibleGivenHidden(hiddenLayerSample);
+		DoubleMatrix hiddenLayerActivation = sampleHiddenGivenVisible(visibleLayerSample);
+		return hiddenLayerActivation;
+	}
 }
