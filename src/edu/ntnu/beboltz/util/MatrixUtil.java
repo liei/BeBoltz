@@ -9,11 +9,12 @@ public class MatrixUtil {
 	/**
 	 * Elementwise exponentiation
 	 */
-	public static DoubleMatrix exp(final DoubleMatrix matrix) {
-		DoubleMatrix exponentiatedMatrix = DoubleMatrix.zeros(matrix.length);
+	public static DoubleMatrix exp(DoubleMatrix vector) {
+		assert(vector.rows == 1);
+		DoubleMatrix exponentiatedMatrix = DoubleMatrix.zeros(vector.length);
 		double exp;
-		for (int i = 0; i < matrix.length; i++) {
-			exp = Math.exp(matrix.get(i));
+		for (int i = 0; i < vector.length; i++) {
+			exp = Math.exp(vector.get(i));
 			exponentiatedMatrix.put(i, exp);
 		}
 		return exponentiatedMatrix;
@@ -22,11 +23,12 @@ public class MatrixUtil {
 	/**
 	 * Applies the log function elementwise
 	 */
-	public static DoubleMatrix log(final DoubleMatrix matrix) {
-		DoubleMatrix logMatrix = DoubleMatrix.zeros(matrix.length);
+	public static DoubleMatrix log(DoubleMatrix vector) {
+		assert(vector.rows == 1);
+		DoubleMatrix logMatrix = DoubleMatrix.zeros(vector.length);
 		double exp;
-		for (int i = 0; i < matrix.length; i++) {
-			exp = Math.log(matrix.get(i));
+		for (int i = 0; i < vector.length; i++) {
+			exp = Math.log(vector.get(i));
 			logMatrix.put(i, exp);
 		}
 		return logMatrix;
@@ -35,10 +37,11 @@ public class MatrixUtil {
 	/**
 	 * Sums the elements of the vector.
 	 */
-	public static double sum(final DoubleMatrix matrix) {
+	public static double sum(DoubleMatrix vector) {
+		assert(vector.rows == 1);
 		double sum = 0;
-		for (int i = 0; i < matrix.length; i++) {
-			sum += matrix.get(i);
+		for (int i = 0; i < vector.length; i++) {
+			sum += vector.get(i);
 		}
 		return sum;
 	}
@@ -48,7 +51,7 @@ public class MatrixUtil {
 	 * Turns the argument matrix into a binary vector. In a stochastic manner.
 	 * P(x=1)= x
 	 */
-	public static DoubleMatrix toStochasticBinaryVector(final DoubleMatrix vector) {
+	public static DoubleMatrix toStochasticBinaryVector(DoubleMatrix vector) {
 		assert(vector.rows == 1);
 		DoubleMatrix binaryVector = DoubleMatrix.zeros(vector.length);
 		Random random = new Random();
@@ -57,6 +60,15 @@ public class MatrixUtil {
 				binaryVector.put(i, 1);
 		}
 		return binaryVector;
+	}
+	
+	/**
+	 * Calculates the mean value of the vector.
+	 * 
+	 */
+	public static double mean(DoubleMatrix matrix) {
+		assert(matrix.length > 0);
+		return sum(matrix) / matrix.length;
 	}
 
 }
