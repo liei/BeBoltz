@@ -3,20 +3,24 @@ import java.util.Random;
 
 public class Rbm {
 	
-	private double[][] weights;
-	private double[] hiddenLayerBias;
+	public double[][] weights;
+	public double[] hiddenLayerBias;
 	private double[] visibleLayerBias;
+	private int numHiddenNodes;
+	private int numVisibleNodes;
 
 	/**
-	 * @param numVisible Number of visible nodes in RBM
-	 * @param numHidden  Number of hidden nodes in RBM
+	 * @param numVisibleNodes Number of visible nodes in RBM
+	 * @param numHiddenNodes  Number of hidden nodes in RBM
 	 * Creates random weights between the nodes.
 	 */
-	public Rbm(int numVisible, int numHidden) {
-		assert(numVisible > 0 && numHidden > 0);
-		weights = new double[numVisible][numHidden];
+	public Rbm(int numVisibleNodes, int numHiddenNodes) {
+		assert(numVisibleNodes > 0 && numHiddenNodes > 0);
+		this.numHiddenNodes = numHiddenNodes;
+		this.numVisibleNodes = numVisibleNodes;
+		weights = new double[numVisibleNodes][numHiddenNodes];
 		Random random = new Random();
-		double high = 4 * Math.sqrt(6 / (numHidden + numVisible));
+		double high = 4 * Math.sqrt(6 / (numHiddenNodes + numVisibleNodes));
 		double low = -high;
 		for (int i = 0; i < weights.length; i++) {
 			for (int j = 0; j < weights[i].length; j++) {
@@ -24,8 +28,8 @@ public class Rbm {
 			}
 		}
 		
-		hiddenLayerBias = new double[numHidden];
-		visibleLayerBias = new double[numVisible];
+		hiddenLayerBias = new double[numHiddenNodes];
+		visibleLayerBias = new double[numVisibleNodes];
 
 		for (int weight = 0; weight < hiddenLayerBias.length; weight++) {
 			hiddenLayerBias[weight] = 0;
@@ -35,6 +39,24 @@ public class Rbm {
 			hiddenLayerBias[weight] = 0;
 		}
 	}
+	
+	/**
+	 * @param visibleLayerActivation Array indicating the binary activation of the visible layer.
+	 * @return activations of the hidden layer
+	 */
+	public double[] propup(byte[] visibleLayerActivation) {
+		double[] activations = new double [numHiddenNodes];
+		double stimuli = 0;
+			for (int column = 0; column < weights[0].length; column++) {
+				for (int row = 0; row < weights.length; row++) {
+					stimuli += visibleLayerActivation[row] * weights[row][column];
+			}
+			stimuli += hiddenLayerBias[column];
+			activations[column] = sigmoid(stimuli);	
+			stimuli = 0;	
+		}
+		return activations; 
+	}
 		
 	/**
 	 * @param input Sum stimulus to node.
@@ -42,5 +64,14 @@ public class Rbm {
 	 */
 	public double sigmoid (double input) {
 		return 1 / (1 + Math.exp(input));
+	}
+	
+	/**
+	 * @param from Index of start node.
+	 * @param to Index of end node
+	 * @return The weight between the nodes.
+	 */
+	public double getWeight(int from, int to) {
+		return weights[from][to];
 	}
 }
