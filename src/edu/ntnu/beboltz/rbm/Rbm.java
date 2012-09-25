@@ -1,5 +1,10 @@
 package edu.ntnu.beboltz.rbm;
+import static edu.ntnu.beboltz.util.MatrixUtil.exp;
+import static edu.ntnu.beboltz.util.MatrixUtil.log;
+import static edu.ntnu.beboltz.util.MatrixUtil.sum;
+
 import java.util.Random;
+
 import org.jblas.DoubleMatrix;
 
 public class Rbm {
@@ -100,42 +105,7 @@ public class Rbm {
 		double hiddenTerm = sum(log(DoubleMatrix.ones(numHiddenNodes).add(exp(stimuli))));
 		return -hiddenTerm - vbiasTerm;
 	}
-	
-	/**
-	 * Elementwise exponentiation
-	 */
-	private DoubleMatrix exp(final DoubleMatrix matrix) {
-		DoubleMatrix exponentiatedMatrix = DoubleMatrix.zeros(matrix.length);
-		double exp;
-		for (int i = 0; i < matrix.length; i++) {
-			exp = Math.exp(matrix.get(i));
-			exponentiatedMatrix.put(i, exp);
-		}
-		return exponentiatedMatrix;
-	}
-	
-	/**
-	 * Applies the log function elementwise
-	 */
-	private DoubleMatrix log(final DoubleMatrix matrix) {
-		DoubleMatrix logMatrix = DoubleMatrix.zeros(matrix.length);
-		double exp;
-		for (int i = 0; i < matrix.length; i++) {
-			exp = Math.log(matrix.get(i));
-			logMatrix.put(i, exp);
-		}
-		return logMatrix;
-	}
-	
-	private double sum(final DoubleMatrix matrix) {
-		double sum = 0;
-		for (int i = 0; i < matrix.length; i++) {
-			sum += matrix.get(i);
-		}
-		return sum;
-	}
-	
-	
+
 	/**
 	 * @param input the input to the Rbm
 	 * @return A vector with stimulation levels for each node.
