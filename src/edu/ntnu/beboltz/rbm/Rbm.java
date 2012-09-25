@@ -1,13 +1,16 @@
 package edu.ntnu.beboltz.rbm;
 import java.util.Random;
+import org.jblas.DoubleMatrix;
 
 public class Rbm {
 	
-	public double[][] weights;
-	public double[] hiddenLayerBias;
-	private double[] visibleLayerBias;
+	
+	public DoubleMatrix hiddenLayerBias;
+	public DoubleMatrix visibleLayerBias;
 	private int numHiddenNodes;
 	private int numVisibleNodes;
+	
+	public DoubleMatrix weights; 
 
 	/**
 	 * @param numVisibleNodes Number of visible nodes in RBM
@@ -18,7 +21,7 @@ public class Rbm {
 		assert(numVisibleNodes > 0 && numHiddenNodes > 0);
 		this.numHiddenNodes = numHiddenNodes;
 		this.numVisibleNodes = numVisibleNodes;
-		weights = new double[numVisibleNodes][numHiddenNodes];
+		double[][] weights = new double[numVisibleNodes][numHiddenNodes];
 		Random random = new Random();
 		double high = 4 * Math.sqrt(6 / (numHiddenNodes + numVisibleNodes));
 		double low = -high;
@@ -27,35 +30,23 @@ public class Rbm {
 				weights[i][j] = low + high * random.nextDouble();
 			}
 		}
+		this.weights = new DoubleMatrix(weights);
 		
-		hiddenLayerBias = new double[numHiddenNodes];
-		visibleLayerBias = new double[numVisibleNodes];
+		hiddenLayerBias = DoubleMatrix.zeros(numHiddenNodes);
+		visibleLayerBias = DoubleMatrix.zeros(numVisibleNodes);
 
-		for (int weight = 0; weight < hiddenLayerBias.length; weight++) {
-			hiddenLayerBias[weight] = 0;
-		}
-		
-		for (int weight = 0; weight < visibleLayerBias.length; weight++) {
-			hiddenLayerBias[weight] = 0;
-		}
 	}
 	
 	/**
+	 * Propogates the visible units activation upwards to the hidden units.
 	 * @param visibleLayerActivation Array indicating the binary activation of the visible layer.
 	 * @return activations of the hidden layer
 	 */
-	public double[] propup(byte[] visibleLayerActivation) {
-		double[] activations = new double [numHiddenNodes];
-		double stimuli = 0;
-			for (int column = 0; column < weights[0].length; column++) {
-				for (int row = 0; row < weights.length; row++) {
-					stimuli += visibleLayerActivation[row] * weights[row][column];
-			}
-			stimuli += hiddenLayerBias[column];
-			activations[column] = sigmoid(stimuli);	
-			stimuli = 0;	
-		}
-		return activations; 
+	public DoubleMatrix propup(final DoubleMatrix visibleLayerActivation) {
+		assert(visibleLayerActivation.columns == numVisibleNodes);
+		DoubleMatrix stimuli = stimuli(visibleLayerActivation);
+		DoubleMatrix hiddenLayerActivation = sigmoid(stimuli);
+		return hiddenLayerActivation;
 	}
 		
 	/**
@@ -67,11 +58,91 @@ public class Rbm {
 	}
 	
 	/**
+	 * @param stimuli vector of stimulation for the layer
+	 * @return
+	 */
+	private DoubleMatrix sigmoid(final DoubleMatrix stimuli) {
+		assert(stimuli.length == numHiddenNodes);
+		DoubleMatrix layerActivation = DoubleMatrix.zeros(stimuli.length);
+		double activation = 0;
+		for (int nodeIndex = 0; nodeIndex < numHiddenNodes; nodeIndex++) {
+			activation = sigmoid(stimuli.get(nodeIndex));
+			layerActivation.put(nodeIndex, activation);
+		}
+		return layerActivation;
+	}
+	
+	/**
 	 * @param from Index of start node.
 	 * @param to Index of end node
 	 * @return The weight between the nodes.
 	 */
 	public double getWeight(int from, int to) {
-		return weights[from][to];
+		return weights.get(from, to);
+	}
+	
+	/**
+	 * @param nodeIndex Index of node.
+	 * @return The weight to the bias node.
+	 */
+	public double getHiddenLayerBias(int nodeIndex) {
+		return hiddenLayerBias.get(nodeIndex);
+	}
+	
+	/**
+	 * @param sample a sample from visible nodes
+	 * @return The free energy of the sample
+	 */
+	public double freeEnergy(final DoubleMatrix sample) {
+		assert(sample.length == numVisibleNodes);
+		DoubleMatrix stimuli = stimuli(sample);
+		double vbiasTerm = sample.dot(visibleLayerBias);
+		double hiddenTerm = sum(log(DoubleMatrix.ones(numHiddenNodes).add(exp(stimuli))));
+		return -hiddenTerm - vbiasTerm;
+	}
+	
+	/**
+	 * Elementwise exponentiation
+	 */
+	private DoubleMatrix exp(final DoubleMatrix matrix) {
+		DoubleMatrix exponentiatedMatrix = DoubleMatrix.zeros(matrix.length);
+		double exp;
+		for (int i = 0; i < matrix.length; i++) {
+			exp = Math.exp(matrix.get(i));
+			exponentiatedMatrix.put(i, exp);
+		}
+		return exponentiatedMatrix;
+	}
+	
+	/**
+	 * Applies the log function elementwise
+	 */
+	private DoubleMatrix log(final DoubleMatrix matrix) {
+		DoubleMatrix logMatrix = DoubleMatrix.zeros(matrix.length);
+		double exp;
+		for (int i = 0; i < matrix.length; i++) {
+			exp = Math.log(matrix.get(i));
+			logMatrix.put(i, exp);
+		}
+		return logMatrix;
+	}
+	
+	private double sum(final DoubleMatrix matrix) {
+		double sum = 0;
+		for (int i = 0; i < matrix.length; i++) {
+			sum += matrix.get(i);
+		}
+		return sum;
+	}
+	
+	
+	/**
+	 * @param input the input to the Rbm
+	 * @return A vector with stimulation levels for each node.
+	 */
+	private DoubleMatrix stimuli(final DoubleMatrix input) {
+		DoubleMatrix stimuli = input.transpose().mmul(weights);
+		stimuli.add(hiddenLayerBias);
+		return stimuli;
 	}
 }

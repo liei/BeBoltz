@@ -9,6 +9,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import edu.ntnu.beboltz.rbm.Rbm;
+import org.jblas.DoubleMatrix;
 
 public class RbmTest {
 	
@@ -39,15 +40,30 @@ public class RbmTest {
 	@Test
 	public void propup() {
 		Rbm rbm = new Rbm(3, 3);
-		double[] activations = rbm.propup(new byte[] {0,1, 1});
-		double expectedActivation = rbm.sigmoid(rbm.weights[1][0] + rbm.weights[2][0] + rbm.hiddenLayerBias[0]); 
-		assertEquals(expectedActivation, activations[0], 0.01);
+		DoubleMatrix activations = rbm.propup(new DoubleMatrix(new double[] {0,1, 1}));
+		double expectedActivation = rbm.sigmoid(rbm.getWeight(1, 0) + rbm.getWeight(2, 0) + rbm.getHiddenLayerBias(0)); 
+		assertEquals(expectedActivation, activations.get(0), 0.01);
 		
-		expectedActivation = rbm.sigmoid(rbm.weights[1][1] + rbm.weights[2][1] + rbm.hiddenLayerBias[1]); 
-		assertEquals(expectedActivation, activations[1], 0.01);
+		expectedActivation = rbm.sigmoid(rbm.getWeight(1, 1) + rbm.getWeight(2, 1) + rbm.getHiddenLayerBias(1)); 
+		assertEquals(expectedActivation, activations.get(1), 0.01);
 		
-		expectedActivation = rbm.sigmoid(rbm.weights[1][2] + rbm.weights[2][2] + rbm.hiddenLayerBias[2]); 
-		assertEquals(expectedActivation, activations[2], 0.01);
+		expectedActivation = rbm.sigmoid(rbm.getWeight(1, 2) + rbm.getWeight(2, 2) + rbm.getHiddenLayerBias(2)); 
+		assertEquals(expectedActivation, activations.get(2), 0.01);
 		
 	}
+	
+	@Test
+	public void testFreeEnergy() {
+		Rbm rbm = new Rbm(3, 3);
+		DoubleMatrix sample = new DoubleMatrix(new double[] {0,1, 1});
+		double vbiasTerm = sample.dot(rbm.visibleLayerBias);
+		DoubleMatrix wx_b = sample.transpose().mmul(rbm.weights).add(rbm.hiddenLayerBias);
+		double sum = 0;
+		for (int i = 0; i < wx_b.length; i++) {
+			sum += Math.log(1 + Math.exp(wx_b.get(i)));
+		}
+		double freeEnergy = -sum - vbiasTerm;
+		assertEquals(freeEnergy, rbm.freeEnergy(sample), 0.01);
+	}
+	
 }
