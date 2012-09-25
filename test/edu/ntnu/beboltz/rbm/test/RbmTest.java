@@ -1,6 +1,6 @@
 package edu.ntnu.beboltz.rbm.test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -82,4 +82,15 @@ public class RbmTest {
 		assertEquals(freeEnergy, rbm.freeEnergy(sample), 0.01);
 	}
 	
+	@Test
+	public void sampleHiddenGivenVisibleResultIsBinaryVector() {
+		Rbm rbm = new Rbm(5, 5);
+		DoubleMatrix hiddenSample = new DoubleMatrix(new double[] {0,1, 1, 1, 0});
+		DoubleMatrix visibleSample = rbm.sampleHiddenGivenVisible(hiddenSample);
+		boolean isZeroOrOne;
+		for (int i = 0; i < visibleSample.length; i++) {
+			isZeroOrOne = visibleSample.get(i) == 1.0 || visibleSample.get(i) == 0.0;
+			assertTrue(isZeroOrOne);
+		}
+	}
 }

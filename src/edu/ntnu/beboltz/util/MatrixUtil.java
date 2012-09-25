@@ -1,6 +1,7 @@
 package edu.ntnu.beboltz.util;
 
 import org.jblas.DoubleMatrix;
+import java.util.Random;
 
 public class MatrixUtil {
 	
@@ -40,6 +41,22 @@ public class MatrixUtil {
 			sum += matrix.get(i);
 		}
 		return sum;
+	}
+	
+	
+	/**
+	 * Turns the argument matrix into a binary vector. In a stochastic manner.
+	 * P(x=1)= x
+	 */
+	public static DoubleMatrix toStochasticBinaryVector(final DoubleMatrix vector) {
+		assert(vector.rows == 1);
+		DoubleMatrix binaryVector = DoubleMatrix.zeros(vector.length);
+		Random random = new Random();
+		for (int i = 0; i < vector.length; i++) {
+			if(vector.get(i) >= random.nextDouble())
+				binaryVector.put(i, 1);
+		}
+		return binaryVector;
 	}
 
 }

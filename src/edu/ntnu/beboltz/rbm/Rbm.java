@@ -1,7 +1,6 @@
 package edu.ntnu.beboltz.rbm;
-import static edu.ntnu.beboltz.util.MatrixUtil.exp;
-import static edu.ntnu.beboltz.util.MatrixUtil.log;
-import static edu.ntnu.beboltz.util.MatrixUtil.sum;
+import static edu.ntnu.beboltz.util.MatrixUtil.*;
+
 
 import java.util.Random;
 
@@ -140,6 +139,22 @@ public class Rbm {
 		stimuli.add(bias);
 		return stimuli;
 	}
-
 	
+	/**
+	 * Infers the state of visible units given hidden units.
+	 * @param hiddenSample a sample of activation levels for hidden layer.
+	 */
+	public DoubleMatrix sampleVisibleGivenHidden(DoubleMatrix hiddenSample) {
+		DoubleMatrix visibleActivation = propdown(hiddenSample);
+		return toStochasticBinaryVector(visibleActivation);
+	}
+	
+	/**
+	 * Infers the state of hidden units given visible units.
+	 * @param hiddenSample a sample of activation levels for hidden layer.
+	 */
+	public DoubleMatrix sampleHiddenGivenVisible(DoubleMatrix visibleSample) {
+		DoubleMatrix visibleActivation = propup(visibleSample);
+		return toStochasticBinaryVector(visibleActivation);
+	}
 }
