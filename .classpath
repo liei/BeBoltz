@@ -6,7 +6,7 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry kind="lib" path="lib/mnist-tools.jar">
 		<attributes>
-			<attribute name="javadoc_location" value="file:/home/liei/workspace/BeBoltz/doc/mnist-tools/"/>
+			<attribute name="javadoc_location" value="jar:platform:/resource/BeBoltz/lib/mnist-tools.jar!/"/>
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="output" path="bin"/>
