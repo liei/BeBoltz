@@ -1,5 +1,9 @@
 package edu.ntnu.beboltz.rbm;
+import static edu.ntnu.beboltz.util.MatrixUtil.*;
+
+
 import java.util.Random;
+
 import org.jblas.DoubleMatrix;
 
 public class Rbm {
@@ -38,15 +42,28 @@ public class Rbm {
 	}
 	
 	/**
-	 * Propogates the visible units activation upwards to the hidden units.
+	 * Propagates the visible units activation upwards to the hidden units.
 	 * @param visibleLayerActivation Array indicating the binary activation of the visible layer.
 	 * @return activations of the hidden layer
 	 */
 	public DoubleMatrix propup(final DoubleMatrix visibleLayerActivation) {
 		assert(visibleLayerActivation.columns == numVisibleNodes);
-		DoubleMatrix stimuli = stimuli(visibleLayerActivation);
+		DoubleMatrix stimuli = stimuli(visibleLayerActivation, weights, hiddenLayerBias);
 		DoubleMatrix hiddenLayerActivation = sigmoid(stimuli);
 		return hiddenLayerActivation;
+	}
+	
+	/**
+	 * Propagates the hidden units activation downwards to the visible units.
+	 * @param visibleLayerActivation
+	 * @return
+	 */
+	public DoubleMatrix propdown(final DoubleMatrix hiddenLayerActivation) {
+		assert(hiddenLayerActivation.columns == numHiddenNodes);
+		DoubleMatrix stimuli = stimuli(hiddenLayerActivation, weights.transpose(),
+				visibleLayerBias);
+		DoubleMatrix visibleLayerActivation = sigmoid(stimuli);
+		return visibleLayerActivation;
 	}
 		
 	/**
@@ -90,59 +107,77 @@ public class Rbm {
 	}
 	
 	/**
+	 * @param nodeIndex Index of node.
+	 * @return The weight to the bias node.
+	 */
+	public double getVisibleLayerBias(int index) {
+		return visibleLayerBias.get(index);
+	}
+	
+	/**
 	 * @param sample a sample from visible nodes
 	 * @return The free energy of the sample
 	 */
 	public double freeEnergy(final DoubleMatrix sample) {
 		assert(sample.length == numVisibleNodes);
-		DoubleMatrix stimuli = stimuli(sample);
+		DoubleMatrix stimuli = stimuli(sample, weights, hiddenLayerBias);
 		double vbiasTerm = sample.dot(visibleLayerBias);
 		double hiddenTerm = sum(log(DoubleMatrix.ones(numHiddenNodes).add(exp(stimuli))));
 		return -hiddenTerm - vbiasTerm;
 	}
-	
+
 	/**
-	 * Elementwise exponentiation
-	 */
-	private DoubleMatrix exp(final DoubleMatrix matrix) {
-		DoubleMatrix exponentiatedMatrix = DoubleMatrix.zeros(matrix.length);
-		double exp;
-		for (int i = 0; i < matrix.length; i++) {
-			exp = Math.exp(matrix.get(i));
-			exponentiatedMatrix.put(i, exp);
-		}
-		return exponentiatedMatrix;
-	}
-	
-	/**
-	 * Applies the log function elementwise
-	 */
-	private DoubleMatrix log(final DoubleMatrix matrix) {
-		DoubleMatrix logMatrix = DoubleMatrix.zeros(matrix.length);
-		double exp;
-		for (int i = 0; i < matrix.length; i++) {
-			exp = Math.log(matrix.get(i));
-			logMatrix.put(i, exp);
-		}
-		return logMatrix;
-	}
-	
-	private double sum(final DoubleMatrix matrix) {
-		double sum = 0;
-		for (int i = 0; i < matrix.length; i++) {
-			sum += matrix.get(i);
-		}
-		return sum;
-	}
-	
-	
-	/**
-	 * @param input the input to the Rbm
+	 * When calculating the hidden layer stimulation use ship in weights.
+	 * When calculating the visible layer stimulation ship in weights.transpose.
+	 * @param input the input to the layer.
 	 * @return A vector with stimulation levels for each node.
 	 */
-	private DoubleMatrix stimuli(final DoubleMatrix input) {
+	private DoubleMatrix stimuli(final DoubleMatrix input, final DoubleMatrix weights,
+			final DoubleMatrix bias) {
+		assert(input.length == weights.rows);
 		DoubleMatrix stimuli = input.transpose().mmul(weights);
-		stimuli.add(hiddenLayerBias);
+		stimuli.add(bias);
 		return stimuli;
+	}
+	
+	/**
+	 * Infers the state of visible units given hidden units.
+	 * @param hiddenSample a sample of activation levels for hidden layer.
+	 */
+	public DoubleMatrix sampleVisibleGivenHidden(DoubleMatrix hiddenSample) {
+		DoubleMatrix visibleActivation = propdown(hiddenSample);
+		return toStochasticBinaryVector(visibleActivation);
+	}
+	
+	/**
+	 * Infers the state of hidden units given visible units.
+	 * @param hiddenSample a sample of activation levels for hidden layer.
+	 */
+	public DoubleMatrix sampleHiddenGivenVisible(DoubleMatrix visibleSample) {
+		DoubleMatrix visibleActivation = propup(visibleSample);
+		return toStochasticBinaryVector(visibleActivation);
+	}
+	
+	
+	/**
+	 * One step of Gibbs sampling, starting from visible layer.
+	 * @param sample of visible layer
+	 * @return activation of visible layer
+	 */
+	public DoubleMatrix gibbsVisibleHiddenVisible(DoubleMatrix visibleLayerSample) {
+		DoubleMatrix hiddenLayerSample = sampleHiddenGivenVisible(visibleLayerSample);
+		DoubleMatrix visibleActivation = sampleVisibleGivenHidden(hiddenLayerSample);
+		return visibleActivation;
+	}
+	
+	/**
+	 * One step of Gibbs sampling, starting from hidden layer.
+	 * @param sample of hidden layer
+	 * @return activation of visible layer
+	 */
+	public DoubleMatrix gibbsHiddenVisibleHidden(DoubleMatrix hiddenLayerSample) {
+		DoubleMatrix visibleLayerSample = sampleVisibleGivenHidden(hiddenLayerSample);
+		DoubleMatrix hiddenLayerActivation = sampleHiddenGivenVisible(visibleLayerSample);
+		return hiddenLayerActivation;
 	}
 }
