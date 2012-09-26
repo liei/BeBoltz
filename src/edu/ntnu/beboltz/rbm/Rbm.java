@@ -188,13 +188,12 @@ public class Rbm {
 	
 	/**
 	 * Calculates weight changes for use in contrastive divergence
-	 * @param trainingCase 
+	 * @param inputSample 
 	 * @return The weight changes based on the training case.
 	 */
-	private DoubleMatrix weightChangeFromTrainingCase(DoubleMatrix trainingCase) {
-		DoubleMatrix chainStart = sampleHiddenGivenVisible(trainingCase);
+	private DoubleMatrix weightChangeFromTrainingCase(DoubleMatrix inputSample) {
+		DoubleMatrix chainStart = sampleHiddenGivenVisible(inputSample);
 		DoubleMatrix chainEnd = gibbsHiddenVisibleHidden(chainStart);
-		
 		return chainStart.sub(chainEnd);
 	}
 	
@@ -203,13 +202,14 @@ public class Rbm {
 	 * @param trainingCases list of all training cases.
 	 * @return The average weight change from all the training cases.
 	 */
-	private DoubleMatrix averageWeightChangeFromTrainingCases(List<DataSet.Item> trainingCases) {
+	private DoubleMatrix averageWeightChangeFromTrainingCases(DataSet trainingCases) {
 		DoubleMatrix weightChanges = DoubleMatrix.zeros(numVisibleNodes, numHiddenNodes);
 		DoubleMatrix weightChange;
 		for (DataSet.Item trainingCase : trainingCases) {
 			weightChange = weightChangeFromTrainingCase(trainingCase.asInputVector()); 
 			weightChanges.add(weightChange);
 		}
+		
 		double averageFactor = 1.0 / (trainingCases.size());
 		weightChanges.mul(averageFactor);
 		return weightChanges;
@@ -218,11 +218,14 @@ public class Rbm {
 	/**
 	 * Uses contrastive divergence to update the weights of the RBM.
 	 * @param trainingCases
+	 * @param epochs number of times to train on the training cases.
 	 */
-	public void train(List<DataSet.Item> trainingCases) {
-		DoubleMatrix weightChanges = averageWeightChangeFromTrainingCases(trainingCases);
-		DoubleMatrix scaledWeightChanges = weightChanges.mul(learningRate);
-		weights = weights.add(scaledWeightChanges);
+	public void train(DataSet trainingCases, int epochs) {
+		for (int i = 0; i < epochs; i++) {
+			DoubleMatrix weightChanges = averageWeightChangeFromTrainingCases(trainingCases);
+			DoubleMatrix scaledWeightChanges = weightChanges.mul(learningRate);
+			weights = weights.add(scaledWeightChanges);
+		}
 	}
 	
 	/**
