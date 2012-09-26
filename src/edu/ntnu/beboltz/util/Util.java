@@ -4,6 +4,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 
+import org.jblas.DoubleMatrix;
+
 public class Util {
 
 	public static void writeImage(double[] img, int width, String imagefile) throws IOException{
@@ -27,5 +29,7 @@ public class Util {
         }
 	}
 	
-	
+	public static void writeImage(DoubleMatrix w,String imagefile) throws IOException{
+		writeImage(w.data,w.columns,imagefile);
+	}
 }
