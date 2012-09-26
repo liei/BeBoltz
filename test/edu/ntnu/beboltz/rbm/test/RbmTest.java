@@ -25,7 +25,7 @@ public class RbmTest {
 
 	@Before
 	public void setUp() throws Exception {
-		rbm = new Rbm(10,10);
+		rbm = new Rbm(10, 10, 0);
 	}
 
 	@After
@@ -39,7 +39,7 @@ public class RbmTest {
 	
 	@Test
 	public void propup() {
-		Rbm rbm = new Rbm(3, 3);
+		Rbm rbm = new Rbm(3, 3, 0);
 		DoubleMatrix activations = rbm.propup(new DoubleMatrix(new double[] {0,1, 1}));
 		double expectedActivation = rbm.sigmoid(rbm.getWeight(1, 0) + rbm.getWeight(2, 0) + rbm.getHiddenLayerBias(0)); 
 		assertEquals(expectedActivation, activations.get(0), 0.01);
@@ -54,7 +54,7 @@ public class RbmTest {
 	
 	@Test
 	public void propdown() {
-		Rbm rbm = new Rbm(3, 3);
+		Rbm rbm = new Rbm(3,3, 0);
 		DoubleMatrix activations = rbm.propdown(new DoubleMatrix(new double[] {0,1, 1}));
 		double expectedActivation = rbm.sigmoid(rbm.getWeight(0, 1) + rbm.getWeight(0, 2) + rbm.getVisibleLayerBias(0)); 
 		assertEquals(expectedActivation, activations.get(0), 0.01);
@@ -70,7 +70,7 @@ public class RbmTest {
 	
 	@Test
 	public void testFreeEnergy() {
-		Rbm rbm = new Rbm(3, 3);
+		Rbm rbm = new Rbm(3, 3, 0);
 		DoubleMatrix sample = new DoubleMatrix(new double[] {0,1, 1});
 		double vbiasTerm = sample.dot(rbm.visibleLayerBias);
 		DoubleMatrix wx_b = sample.transpose().mmul(rbm.weights).add(rbm.hiddenLayerBias);
@@ -84,7 +84,7 @@ public class RbmTest {
 	
 	@Test
 	public void sampleHiddenGivenVisibleResultIsBinaryVector() {
-		Rbm rbm = new Rbm(5, 5);
+		Rbm rbm = new Rbm(5, 5, 0);
 		DoubleMatrix hiddenSample = new DoubleMatrix(new double[] {0,1, 1, 1, 0});
 		DoubleMatrix visibleSample = rbm.sampleHiddenGivenVisible(hiddenSample);
 		boolean isZeroOrOne;

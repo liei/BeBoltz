@@ -2,9 +2,12 @@ package edu.ntnu.beboltz.rbm;
 import static edu.ntnu.beboltz.util.MatrixUtil.*;
 
 
+import java.util.List;
 import java.util.Random;
 
 import org.jblas.DoubleMatrix;
+import edu.ntnu.beboltz.util.DataSet;
+
 
 public class Rbm {
 	
@@ -13,6 +16,7 @@ public class Rbm {
 	public DoubleMatrix visibleLayerBias;
 	private int numHiddenNodes;
 	private int numVisibleNodes;
+	private double learningRate;
 	
 	public DoubleMatrix weights; 
 
@@ -21,8 +25,9 @@ public class Rbm {
 	 * @param numHiddenNodes  Number of hidden nodes in RBM
 	 * Creates random weights between the nodes.
 	 */
-	public Rbm(int numVisibleNodes, int numHiddenNodes) {
+	public Rbm(int numVisibleNodes, int numHiddenNodes, double learningRate) {
 		assert(numVisibleNodes > 0 && numHiddenNodes > 0);
+		this.learningRate = learningRate;
 		this.numHiddenNodes = numHiddenNodes;
 		this.numVisibleNodes = numVisibleNodes;
 		double[][] weights = new double[numVisibleNodes][numHiddenNodes];
@@ -46,7 +51,7 @@ public class Rbm {
 	 * @param visibleLayerActivation Array indicating the binary activation of the visible layer.
 	 * @return activations of the hidden layer
 	 */
-	public DoubleMatrix propup(final DoubleMatrix visibleLayerActivation) {
+	public DoubleMatrix propup(DoubleMatrix visibleLayerActivation) {
 		assert(visibleLayerActivation.columns == numVisibleNodes);
 		DoubleMatrix stimuli = stimuli(visibleLayerActivation, weights, hiddenLayerBias);
 		DoubleMatrix hiddenLayerActivation = sigmoid(stimuli);
@@ -58,7 +63,7 @@ public class Rbm {
 	 * @param visibleLayerActivation
 	 * @return
 	 */
-	public DoubleMatrix propdown(final DoubleMatrix hiddenLayerActivation) {
+	public DoubleMatrix propdown(DoubleMatrix hiddenLayerActivation) {
 		assert(hiddenLayerActivation.columns == numHiddenNodes);
 		DoubleMatrix stimuli = stimuli(hiddenLayerActivation, weights.transpose(),
 				visibleLayerBias);
@@ -78,7 +83,7 @@ public class Rbm {
 	 * @param stimuli vector of stimulation for the layer
 	 * @return
 	 */
-	private DoubleMatrix sigmoid(final DoubleMatrix stimuli) {
+	private DoubleMatrix sigmoid(DoubleMatrix stimuli) {
 		assert(stimuli.length == numHiddenNodes);
 		DoubleMatrix layerActivation = DoubleMatrix.zeros(stimuli.length);
 		double activation = 0;
@@ -118,7 +123,7 @@ public class Rbm {
 	 * @param sample a sample from visible nodes
 	 * @return The free energy of the sample
 	 */
-	public double freeEnergy(final DoubleMatrix sample) {
+	public double freeEnergy(DoubleMatrix sample) {
 		assert(sample.length == numVisibleNodes);
 		DoubleMatrix stimuli = stimuli(sample, weights, hiddenLayerBias);
 		double vbiasTerm = sample.dot(visibleLayerBias);
@@ -132,8 +137,8 @@ public class Rbm {
 	 * @param input the input to the layer.
 	 * @return A vector with stimulation levels for each node.
 	 */
-	private DoubleMatrix stimuli(final DoubleMatrix input, final DoubleMatrix weights,
-			final DoubleMatrix bias) {
+	private DoubleMatrix stimuli(DoubleMatrix input, DoubleMatrix weights,
+			 DoubleMatrix bias) {
 		assert(input.length == weights.rows);
 		DoubleMatrix stimuli = input.transpose().mmul(weights);
 		stimuli.add(bias);
@@ -179,5 +184,44 @@ public class Rbm {
 		DoubleMatrix visibleLayerSample = sampleVisibleGivenHidden(hiddenLayerSample);
 		DoubleMatrix hiddenLayerActivation = sampleHiddenGivenVisible(visibleLayerSample);
 		return hiddenLayerActivation;
+	}
+	
+	/**
+	 * Calculates weight changes for use in contrastive divergence
+	 * @param trainingCase 
+	 * @return The weight changes based on the training case.
+	 */
+	private DoubleMatrix weightChangeFromTrainingCase(DoubleMatrix trainingCase) {
+		DoubleMatrix chainStart = sampleHiddenGivenVisible(trainingCase);
+		DoubleMatrix chainEnd = gibbsHiddenVisibleHidden(chainStart);
+		
+		return chainStart.sub(chainEnd);
+	}
+	
+	/**
+	 * 
+	 * @param trainingCases list of all training cases.
+	 * @return The average weight change from all the training cases.
+	 */
+	private DoubleMatrix averageWeightChangeFromTrainingCases(List<DataSet.Item> trainingCases) {
+		DoubleMatrix weightChanges = DoubleMatrix.zeros(numVisibleNodes, numHiddenNodes);
+		DoubleMatrix weightChange;
+		for (DataSet.Item trainingCase : trainingCases) {
+			weightChange = weightChangeFromTrainingCase(trainingCase.asInputVector()); 
+			weightChanges.add(weightChange);
+		}
+		double averageFactor = 1.0 / (trainingCases.size());
+		weightChanges.mul(averageFactor);
+		return weightChanges;
+	}
+	
+	/**
+	 * Uses contrastive divergence to update the weights of the RBM.
+	 * @param trainingCases
+	 */
+	public void train(List<DataSet.Item> trainingCases) {
+		DoubleMatrix weightChanges = averageWeightChangeFromTrainingCases(trainingCases);
+		DoubleMatrix scaledWeightChanges = weightChanges.mul(learningRate);
+		weights = weights.add(scaledWeightChanges);
 	}
 }
