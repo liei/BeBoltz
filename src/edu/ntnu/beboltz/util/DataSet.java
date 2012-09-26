@@ -7,6 +7,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
+import org.jblas.DoubleMatrix;
+
 import mnist.tools.MnistImageFile;
 import mnist.tools.MnistLabelFile;
 import mnist.tools.MnistManager;
@@ -83,16 +85,6 @@ public class DataSet implements Iterable<DataSet.Item>{
 		return new DataSet(filteredItems,imageWidth,imageHeight,true);
 	}
 	
-//	public DataSet nextBatch(int batchLength){
-//		
-//		List<DataSet.Item> items = new ArrayList<DataSet.Item>(batchLength);
-//		
-//		
-//		
-//		
-//		return new DataSet(batch,imageWidth,imageHeight,hasLabels);
-//	}
-	
 	public int getImageWidth(){
 		return imageWidth;
 	}
@@ -126,8 +118,23 @@ public class DataSet implements Iterable<DataSet.Item>{
 			this.image = image;
 			this.label = label;
 		}
+		
+		/**
+		 * Assumes the image data has been normalized to fall in the interval [0,1] to be interpreted as 
+		 * probabilities. 
+		 * @return A binary vector representing the activation level of each node in the visible layer.
+		 */
+		public DoubleMatrix asInputVector() {
+			DoubleMatrix inputVector = DoubleMatrix.zeros(image.length);
+			int isNeuronActivated;
+			for (int pixel = 0; pixel < image.length; pixel++) {
+				isNeuronActivated = (int)Math.round(image[pixel]);
+				inputVector.put(pixel,isNeuronActivated);
+			}
+			return asInputVector();
+		}
 	}
-	
+
 	public static void main(String[] args) throws IOException {
 		System.out.print("loading...");
 		double start = System.currentTimeMillis();
