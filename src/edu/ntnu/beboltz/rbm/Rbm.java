@@ -23,7 +23,7 @@ public class Rbm {
 		this.numVisibleNodes = numVisibleNodes;
 		double[][] weights = new double[numVisibleNodes][numHiddenNodes];
 		Random random = new Random();
-		double high = 4 * Math.sqrt(6 / (numHiddenNodes + numVisibleNodes));
+		double high = 4 * Math.sqrt(6.0 / (numHiddenNodes + numVisibleNodes));
 		double low = -high;
 		for (int i = 0; i < weights.length; i++) {
 			for (int j = 0; j < weights[i].length; j++) {
