@@ -224,4 +224,18 @@ public class Rbm {
 		DoubleMatrix scaledWeightChanges = weightChanges.mul(learningRate);
 		weights = weights.add(scaledWeightChanges);
 	}
+	
+	/**
+	 * Perform Gibbs sampling for sampleSteps number of steps using the training case as seed.
+	 * @param trainingCase
+	 * @param sampleSteps
+	 * @return a matrix giving activations
+	 */
+	public DoubleMatrix sample(DataSet.Item trainingCase, int sampleSteps) {
+		DoubleMatrix sample = gibbsVisibleHiddenVisible(trainingCase.asInputVector());
+		for (int i = 1; i < sampleSteps; i++) {
+			sample = gibbsHiddenVisibleHidden(sample);
+		}
+		return sample;
+	}
 }
