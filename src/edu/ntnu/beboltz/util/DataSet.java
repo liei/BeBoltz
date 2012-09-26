@@ -85,6 +85,11 @@ public class DataSet implements Iterable<DataSet.Item>{
 		return new DataSet(filteredItems,imageWidth,imageHeight,true);
 	}
 	
+	public DataSet.Item randomItem() {
+		Random random = new Random();
+		return getItem(random.nextInt(size()));
+	}
+	
 	public int getImageWidth(){
 		return imageWidth;
 	}
@@ -131,7 +136,7 @@ public class DataSet implements Iterable<DataSet.Item>{
 				isNeuronActivated = (int)Math.round(image[pixel]);
 				inputVector.put(pixel,isNeuronActivated);
 			}
-			return asInputVector();
+			return inputVector;
 		}
 	}
 
