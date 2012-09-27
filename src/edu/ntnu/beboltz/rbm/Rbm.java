@@ -36,7 +36,7 @@ public class Rbm {
 		double low = -high;
 		for (int i = 0; i < weights.length; i++) {
 			for (int j = 0; j < weights[i].length; j++) {
-				weights[i][j] = low + high * random.nextDouble();
+				weights[i][j] = low + (high - low) * random.nextDouble();
 			}
 		}
 		this.weights = new DoubleMatrix(weights);
