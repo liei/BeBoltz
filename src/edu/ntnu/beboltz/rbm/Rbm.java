@@ -221,10 +221,13 @@ public class Rbm {
 	 * @return a matrix giving activations
 	 */
 	public DoubleMatrix sample(DataSet.Item trainingCase, int sampleSteps) {
-		DoubleMatrix sample = gibbsVisibleHiddenVisible(trainingCase.asInputVector());
+		DoubleMatrix inputVector = trainingCase.asInputVector();
+		DoubleMatrix hidden = sampleHiddenGivenVisible(inputVector);
+		DoubleMatrix visible = propdown(hidden);
 		for (int i = 1; i < sampleSteps; i++) {
-			sample = gibbsVisibleHiddenVisible(sample);
+			hidden = sampleHiddenGivenVisible(visible);
+			visible = propdown(hidden);
 		}
-		return sample;
+		return visible;
 	}
 }
