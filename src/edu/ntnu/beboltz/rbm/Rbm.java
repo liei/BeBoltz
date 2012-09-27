@@ -211,6 +211,8 @@ public class Rbm {
 		}
 	}
 	
+
+	
 	
 	/**
 	 * Perform Gibbs sampling for sampleSteps number of steps using the training case as seed.
@@ -221,7 +223,7 @@ public class Rbm {
 	public DoubleMatrix sample(DataSet.Item trainingCase, int sampleSteps) {
 		DoubleMatrix sample = gibbsVisibleHiddenVisible(trainingCase.asInputVector());
 		for (int i = 1; i < sampleSteps; i++) {
-			sample = gibbsHiddenVisibleHidden(sample);
+			sample = gibbsVisibleHiddenVisible(sample);
 		}
 		return sample;
 	}
