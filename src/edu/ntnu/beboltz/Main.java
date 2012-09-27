@@ -30,10 +30,13 @@ public class Main {
 		System.out.printf(" done (%.2f s)%n",(stop-start)/1000);
 		int imageDimensions = set.getImageHeight() * set.getImageWidth();
 		rbm = new Rbm(imageDimensions, 250, LEARNING_RATE);
+		System.out.println("Training...");
 		rbm.train(set, EPOCHS);
+		System.out.println("Sampling...");
 		DoubleMatrix sample = rbm.sample(set.randomItem(), 1000);
 		try {
 			Util.writeImage(sample, "foo.ppm");
+			System.out.println("Wrote image");
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

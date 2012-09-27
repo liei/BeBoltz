@@ -186,34 +186,7 @@ public class Rbm {
 		return hiddenLayerActivation;
 	}
 	
-	/**
-	 * Calculates weight changes for use in contrastive divergence
-	 * @param inputSample 
-	 * @return The weight changes based on the training case.
-	 */
-	private DoubleMatrix weightChangeFromTrainingCase(DoubleMatrix inputSample) {
-		DoubleMatrix chainStart = sampleHiddenGivenVisible(inputSample);
-		DoubleMatrix chainEnd = gibbsHiddenVisibleHidden(chainStart);
-		return chainStart.sub(chainEnd);
-	}
-	
-	/**
-	 * 
-	 * @param trainingCases list of all training cases.
-	 * @return The average weight change from all the training cases.
-	 */
-	private DoubleMatrix averageWeightChangeFromTrainingCases(DataSet trainingCases) {
-		DoubleMatrix weightChanges = DoubleMatrix.zeros(numVisibleNodes, numHiddenNodes);
-		DoubleMatrix weightChange;
-		for (DataSet.Item trainingCase : trainingCases) {
-			weightChange = weightChangeFromTrainingCase(trainingCase.asInputVector()); 
-			weightChanges.add(weightChange);
-		}
-		
-		double averageFactor = 1.0 / (trainingCases.size());
-		weightChanges.mul(averageFactor);
-		return weightChanges;
-	}
+
 	
 	/**
 	 * Uses contrastive divergence to update the weights of the RBM.
@@ -221,12 +194,23 @@ public class Rbm {
 	 * @param epochs number of times to train on the training cases.
 	 */
 	public void train(DataSet trainingCases, int epochs) {
-		for (int i = 0; i < epochs; i++) {
-			DoubleMatrix weightChanges = averageWeightChangeFromTrainingCases(trainingCases);
-			DoubleMatrix scaledWeightChanges = weightChanges.mul(learningRate);
-			weights = weights.add(scaledWeightChanges);
+		for (int epoch = 0; epoch < epochs; epoch++) {
+			for (DataSet.Item trainingCase : trainingCases) {
+				DoubleMatrix v0 = trainingCase.asInputVector();
+				DoubleMatrix h0 = sampleHiddenGivenVisible(v0); // positive phase
+				
+				DoubleMatrix v1 =  sampleVisibleGivenHidden(h0);
+				DoubleMatrix h1 = sampleHiddenGivenVisible(v1);
+				
+				DoubleMatrix foo = v0.mmul(h0.transpose());
+				DoubleMatrix bar = v1.mmul(h1.transpose());
+				
+				DoubleMatrix weightChanges = foo.sub(bar);
+				weights = weights.add(weightChanges.mul(learningRate));
+			}
 		}
 	}
+	
 	
 	/**
 	 * Perform Gibbs sampling for sampleSteps number of steps using the training case as seed.
