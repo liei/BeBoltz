@@ -204,7 +204,6 @@ public class Rbm {
 //		DoubleMatrix hiddenLayerActivation = sampleHiddenGivenVisible(visibleLayerSample);
 //		return hiddenLayerActivation;
 //	}
-	
 
 	
 	/**
