@@ -37,11 +37,16 @@ public class DataSet implements Iterable<DataSet.Item>{
 	}
 	
 	public static DataSet loadWithLabels(String imagefile, String labelfile) throws IOException{
+		return loadWithLabels(imagefile, labelfile, -1);
+	}
+	
+	public static DataSet loadWithLabels(String imagefile, String labelfile, int cases) throws IOException{
 		MnistManager manager = new MnistManager(imagefile,labelfile);
 		
 		MnistImageFile images = manager.getImages();
 		MnistLabelFile labels = manager.getLabels();
-		int numItems = images.getCount();
+		int numItems = cases < 0 ? images.getCount() : cases;
+
 
 		int w = images.getCols();
 		int h = images.getRows();
