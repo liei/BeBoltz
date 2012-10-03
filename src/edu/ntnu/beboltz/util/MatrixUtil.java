@@ -39,7 +39,6 @@ public class MatrixUtil {
 	 */
 	public static double sum(DoubleMatrix vector) {
 		assert(vector.columns == 1);
-		System.out.println("lol");
 		double sum = 0;
 		for (int i = 0; i < vector.length; i++) {
 			sum += vector.get(i);
