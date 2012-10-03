@@ -68,19 +68,19 @@ public class RbmTest {
 	}
 	
 	
-	@Test
-	public void testFreeEnergy() {
-		Rbm rbm = new Rbm(3, 3, 0);
-		DoubleMatrix sample = new DoubleMatrix(new double[] {0,1, 1});
-		double vbiasTerm = sample.dot(rbm.visibleLayerBias);
-		DoubleMatrix wx_b = sample.transpose().mmul(rbm.weights).add(rbm.hiddenLayerBias);
-		double sum = 0;
-		for (int i = 0; i < wx_b.length; i++) {
-			sum += Math.log(1 + Math.exp(wx_b.get(i)));
-		}
-		double freeEnergy = -sum - vbiasTerm;
-		assertEquals(freeEnergy, rbm.freeEnergy(sample), 0.01);
-	}
+//	@Test
+//	public void testFreeEnergy() {
+//		Rbm rbm = new Rbm(3, 3, 0);
+//		DoubleMatrix sample = new DoubleMatrix(new double[] {0,1, 1});
+//		double vbiasTerm = sample.dot(rbm.visibleLayerBias);
+//		DoubleMatrix wx_b = sample.transpose().mmul(rbm.weights).add(rbm.hiddenLayerBias);
+//		double sum = 0;
+//		for (int i = 0; i < wx_b.length; i++) {
+//			sum += Math.log(1 + Math.exp(wx_b.get(i)));
+//		}
+//		double freeEnergy = -sum - vbiasTerm;
+//		assertEquals(freeEnergy, rbm.freeEnergy(sample), 0.01);
+//	}
 	
 	@Test
 	public void sampleHiddenGivenVisibleResultIsBinaryVector() {
