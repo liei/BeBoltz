@@ -10,7 +10,7 @@ public class MatrixUtil {
 	 * Elementwise exponentiation
 	 */
 	public static DoubleMatrix exp(DoubleMatrix vector) {
-		assert(vector.rows == 1);
+		assert(vector.columns == 1);
 		DoubleMatrix exponentiatedMatrix = DoubleMatrix.zeros(vector.length);
 		double exp;
 		for (int i = 0; i < vector.length; i++) {
@@ -24,7 +24,7 @@ public class MatrixUtil {
 	 * Applies the log function elementwise
 	 */
 	public static DoubleMatrix log(DoubleMatrix vector) {
-		assert(vector.rows == 1);
+		assert(vector.columns == 1);
 		DoubleMatrix logMatrix = DoubleMatrix.zeros(vector.length);
 		double exp;
 		for (int i = 0; i < vector.length; i++) {
@@ -38,7 +38,8 @@ public class MatrixUtil {
 	 * Sums the elements of the vector.
 	 */
 	public static double sum(DoubleMatrix vector) {
-		assert(vector.rows == 1);
+		assert(vector.columns == 1);
+		System.out.println("lol");
 		double sum = 0;
 		for (int i = 0; i < vector.length; i++) {
 			sum += vector.get(i);
@@ -49,15 +50,16 @@ public class MatrixUtil {
 	
 	/**
 	 * Turns the argument matrix into a binary vector. In a stochastic manner.
-	 * P(x=1)= x
+	 * P(x = 1) = x
 	 */
 	public static DoubleMatrix toStochasticBinaryVector(DoubleMatrix vector) {
-		assert(vector.rows == 1);
+		assert(vector.columns == 1);
 		DoubleMatrix binaryVector = DoubleMatrix.zeros(vector.length);
 		Random random = new Random();
 		for (int i = 0; i < vector.length; i++) {
-			if(vector.get(i) >= random.nextDouble())
+			if(vector.get(i) >= random.nextDouble()){
 				binaryVector.put(i, 1);
+			}
 		}
 		return binaryVector;
 	}
