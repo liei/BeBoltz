@@ -4,6 +4,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.PrintWriter;
+import java.util.Arrays;
 
 import org.jblas.DoubleMatrix;
 
@@ -40,6 +41,27 @@ public class Util {
         }
 	}
 	
+	public static void writeWeightImage(double[][] w, String imagefile) throws IOException {
+		double[] a = new double[w.length * w[0].length];
+		for(int i = 1; i < w.length; i++){
+			for(int j = 1; j < w.length; j++){
+				a[i*w.length + j] = w[i][j];
+			}
+		}
+		double min = a[0];
+		double max = a[0];
+		for(int i = 1; i < a.length; i++){
+			min = Math.min(min,a[i]);
+			max = Math.max(max,a[i]);
+		}
+		for(int i = 0; i < a.length; i++){
+			a[i] -= min;
+			a[i] /= max - min;
+		}
+		System.out.printf("weights  rows: %d, cols: %d%n",w.length,w[0].length);
+		writeImage(a,w[0].length,imagefile);
+	}
+	
 	public static void writeWeightImage(DoubleMatrix w, String imagefile) throws IOException{
 		double[] a = w.toArray();
 		double min = a[0];
@@ -67,5 +89,17 @@ public class Util {
 			sb.append(BORDER_COLOR);
 		}
 		return sb.toString();
+	}
+	
+	public static double[] ones(int length){
+		double[] a = new double[length];
+		Arrays.fill(a,1.0);
+		return a;
+	}
+	
+	public static double[] zeros(int length){
+		double[] a = new double[length];
+		Arrays.fill(a,0.0);
+		return a;
 	}
 }

@@ -20,7 +20,7 @@ public class Main {
 
 		DataSet set = null;
 		try {
-			set = DataSet.loadWithLabels(DataSet.IMAGE_FILE, DataSet.LABEL_FILE,50).filter(1,8);
+			set = DataSet.loadWithLabels(DataSet.IMAGE_FILE, DataSet.LABEL_FILE,500).filter(1,8);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -45,23 +45,23 @@ public class Main {
 		start = System.currentTimeMillis();
 		System.out.print("Sampling...");
 		DataSet.Item randItem = set.randomItem();
-		DoubleMatrix sample1 = rbm1.sample(randItem,1000);
+//		DoubleMatrix sample1 = rbm1.sample(randItem,1000);
 		
 		stop = System.currentTimeMillis();
 		System.out.printf(" done (%.2f s)%n",(stop-start)/1000);
 		
-		try {
+//		try {
 			long ts = System.currentTimeMillis();
-			Util.writeImage(sample1.data,28, String.format("images/sample1-%d.ppm",ts));
-			
-			DoubleMatrix w1 = rbm1.getWeights();
+//			Util.writeImage(sample1.data,28, String.format("images/sample1-%d.ppm",ts));
+//			
+			double[][] w1 = rbm1.getWeights();
 			
 			Util.writeWeightImage(w1, String.format("images/weights1-%d.ppm",ts));
-			
-			
-			System.out.println("Wrote images");
-		} catch (IOException e) {
-			System.out.println("FUCK!");
-		}
+//			
+//			
+//			System.out.println("Wrote images");
+//		} catch (IOException e) {
+//			System.out.println("FUCK!");
+//		}
 	}
 }
