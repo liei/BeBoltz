@@ -175,8 +175,8 @@ public class Rbm {
 	 * @param hiddenSample a sample of activation levels for hidden layer.
 	 */
 	public DoubleMatrix sampleHiddenGivenVisible(DoubleMatrix visibleSample) {
-		DoubleMatrix visibleActivation = propup(visibleSample);
-		return toStochasticBinaryVector(visibleActivation);
+		DoubleMatrix hiddenActivation = propup(visibleSample);
+		return toStochasticBinaryVector(hiddenActivation);
 	}
 	
 	
