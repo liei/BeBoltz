@@ -27,7 +27,7 @@ public class Rbm {
 	/**
 	 * @param numVisibleNodes Number of visible nodes in RBM
 	 * @param numHiddenNodes  Number of hidden nodes in RBM
-	 * Creates random weights between the nodes.
+	 * 
 	 */
 	public Rbm(int numVisibleNodes, int numHiddenNodes, double learningRate) {
 		assert(numVisibleNodes > 0 && numHiddenNodes > 0);
@@ -39,6 +39,7 @@ public class Rbm {
 		this.numVisibleUnits = numVisibleNodes;
 		
 		weights = new double[numHiddenNodes][numVisibleNodes];
+		//TODO page 9 in practical guide
 		double high = 4 * Math.sqrt(6.0 / (numHiddenNodes + numVisibleNodes));
 		double low = -high;
 		for (int i = 0; i < weights.length; i++) {
@@ -220,10 +221,9 @@ public class Rbm {
 	public void train(DataSet trainingCases, int epochs) {
 		double start, stop;
 		for (int epoch = 0; epoch < epochs; epoch++) {
-			int caseNum = 0;
 			start = System.currentTimeMillis();
 			for (DataSet.Item trainingCase : trainingCases) {
-				rbmUpdate(trainingCase.image,caseNum++,epoch);
+				rbmUpdate(trainingCase.image);
 //				DoubleMatrix v0 = trainingCase.asInputVector();
 //				DoubleMatrix h0 = sampleHiddenGivenVisible(v0); // positive phase
 //				
@@ -247,7 +247,7 @@ public class Rbm {
 		}
 	}
 	
-	public void rbmUpdate(double[] x1,int c,int e){
+	public void rbmUpdate(double[] x1){
 		/*
 		 * This is the RBM update procedure for binomial units. It can easily adapted to other types of units.
 		 * x1 is a sample from the training distribution for the RBM
@@ -264,13 +264,13 @@ public class Rbm {
 //			sample h1i ∈ {0, 1} from Q(h1i |x1 )
 		double[] q1 = new double[numHiddenUnits];
 		double[] h1 = new double[numHiddenUnits];
-		for(int i = 0; i < q1.length; i++){
+		for(int i = 0; i < numHiddenUnits; i++){
 			double sum = 0;
 			for(int j = 0; j < numVisibleUnits; j++){
 				sum += weights[i][j] * x1[j];
 			}
 			q1[i] = sigmoid(hiddenLayerBias[i] + sum);
-			h1[i] = q1[i] < Math.random() ? 1.0 : 0.0;
+			h1[i] = q1[i] > Math.random() ? 1.0 : 0.0;
 		}
 		
 //		for all visible units j do
@@ -278,20 +278,20 @@ public class Rbm {
 //			sample x2j ∈ {0, 1} from P (x2j = 1|h1 )
 		double[] p2 = new double[numVisibleUnits];
 		double[] x2 = new double[numVisibleUnits];
-		for(int j = 0; j < p2.length; j++){
+		for(int j = 0; j < numVisibleUnits; j++){
 			double sum = 0;
 			for(int i = 0; i < numHiddenUnits; i++){
 				sum += weights[i][j] * h1[i];
 			}
 			p2[j] = sigmoid(visibleLayerBias[j] + sum);
-			x2[j] = p2[j] < Math.random() ? 1.0 : 0.0;
+			x2[j] = p2[j] > Math.random() ? 1.0 : 0.0;
 		}
 		
 		
 //		for all hidden units i do
 //			compute Q(h2i = 1|x2 ) (for binomial units, sigm(ci + sum(Wijx2j)
 		double[] q2 = new double[numHiddenUnits];
-		for(int i = 0; i < q2.length; i++){
+		for(int i = 0; i < numHiddenUnits; i++){
 			double sum = 0;
 			for(int j = 0; j < numVisibleUnits; j++){
 				sum += weights[i][j] * x2[j];
@@ -305,7 +305,7 @@ public class Rbm {
 		// W ← W + e(h1 x′ − Q(h2· = 1|x2 )x′ )
 		for(int i = 0; i < weights.length; i++){
 			for(int j = 0; j < weights[i].length; j++){
-				weights[i][j] += learningRate * (x1[j]*h1[i] - x2[j]*q2[i]);  
+				weights[i][j] += learningRate * (h1[i]*x1[j] - q2[i]*x2[j]);  
 			}
 		}
 		// b ← b + e(x1 − x2)
@@ -332,15 +332,15 @@ public class Rbm {
 		}
 		for(int s = 0; s < sampleSteps; s++){
 
-			for(int i = 0; i < hidden.length; i++){
+			for(int i = 0; i < numHiddenUnits; i++){
 				double sum = 0;
 				for(int j = 0; j < numVisibleUnits; j++){
 					sum += weights[i][j] * visible[j];
 				}
-				hidden[i] = sigmoid(hiddenLayerBias[i] + sum) < Math.random() ? 1.0 : 0.0;
+				hidden[i] = sigmoid(hiddenLayerBias[i] + sum) > Math.random() ? 1.0 : 0.0;
 			}
 			
-			for(int j = 0; j < visible.length; j++){
+			for(int j = 0; j < numVisibleUnits; j++){
 				double sum = 0;
 				for(int i = 0; i < numHiddenUnits; i++){
 					sum += weights[i][j] * hidden[i];
