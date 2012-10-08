@@ -3,6 +3,7 @@ import static edu.ntnu.beboltz.util.MatrixUtil.*;
 
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
@@ -45,7 +46,12 @@ public class Rbm {
 				weights[i][j] = low + (high - low) * random.nextDouble();
 			}
 		}
-		
+		try {
+			Util.writeWeightImage(weights, "images/initw.ppm");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		hiddenLayerBias = Util.zeros(numHiddenUnits);
 		visibleLayerBias = Util.zeros(numVisibleUnits);
 
@@ -212,12 +218,12 @@ public class Rbm {
 	 * @param epochs number of times to train on the training cases.
 	 */
 	public void train(DataSet trainingCases, int epochs) {
+		double start, stop;
 		for (int epoch = 0; epoch < epochs; epoch++) {
 			int caseNum = 0;
+			start = System.currentTimeMillis();
 			for (DataSet.Item trainingCase : trainingCases) {
-				
 				rbmUpdate(trainingCase.image,caseNum++,epoch);
-				
 //				DoubleMatrix v0 = trainingCase.asInputVector();
 //				DoubleMatrix h0 = sampleHiddenGivenVisible(v0); // positive phase
 //				
@@ -229,17 +235,15 @@ public class Rbm {
 //				
 //				DoubleMatrix weightChanges = foo.sub(bar);
 //				weights = weights.add(weightChanges.mul(learningRate));
-//				try {
-//					Util.writeImage(trainingCase.image,28,
-//							String.format("images/cimage-case%d-label%d.ppm",++caseNum,trainingCase.label));
-//					Util.writeWeightImage(weightChanges, 
-//							String.format("images/wchanges-case%d-label%d.ppm",caseNum,trainingCase.label));
-//				} catch (IOException e) {
-//					// TODO Auto-generated catch block
-//					e.printStackTrace();
-//				}
 			}
-			System.out.printf("epoch %d done... %n",epoch);
+			stop = System.currentTimeMillis();
+			System.out.printf("epoch %d done... (%.2f s)%n",epoch,(stop-start)/1000);
+			try {
+				Util.writeWeightImage(weights, String.format("images/weights-%d.ppm",epoch));
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 	}
 	
@@ -277,7 +281,7 @@ public class Rbm {
 		for(int j = 0; j < p2.length; j++){
 			double sum = 0;
 			for(int i = 0; i < numHiddenUnits; i++){
-				sum += weights[i][j] * q1[i];
+				sum += weights[i][j] * h1[i];
 			}
 			p2[j] = sigmoid(visibleLayerBias[j] + sum);
 			x2[j] = p2[j] < Math.random() ? 1.0 : 0.0;
@@ -292,7 +296,7 @@ public class Rbm {
 			for(int j = 0; j < numVisibleUnits; j++){
 				sum += weights[i][j] * x2[j];
 			}
-			q1[i] = sigmoid(hiddenLayerBias[i] + sum);
+			q2[i] = sigmoid(hiddenLayerBias[i] + sum);
 		}
 
 		
@@ -314,12 +318,53 @@ public class Rbm {
 		}
 	}
 
-	/**
-	 * Perform Gibbs sampling for sampleSteps number of steps using the training case as seed.
-	 * @param trainingCase
-	 * @param sampleSteps
-	 * @return a matrix giving activations
-	 */
+	private static int smpl = 0;
+	
+	public double[] sample(double[] sample, int sampleSteps){
+		double[] hidden  = new double[numHiddenUnits];
+		double[] visible = new double[numVisibleUnits];
+		
+		System.arraycopy(sample, 0, visible, 0, sample.length);
+		try {
+			Util.writeImage(sample, 28, String.format("images/sample%d-case.ppm",smpl));
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+		for(int s = 0; s < sampleSteps; s++){
+
+			for(int i = 0; i < hidden.length; i++){
+				double sum = 0;
+				for(int j = 0; j < numVisibleUnits; j++){
+					sum += weights[i][j] * visible[j];
+				}
+				hidden[i] = sigmoid(hiddenLayerBias[i] + sum) < Math.random() ? 1.0 : 0.0;
+			}
+			
+			for(int j = 0; j < visible.length; j++){
+				double sum = 0;
+				for(int i = 0; i < numHiddenUnits; i++){
+					sum += weights[i][j] * hidden[i];
+				}
+				visible[j] = sigmoid(visibleLayerBias[j] + sum);
+			}
+			if(s % 100 == 0){
+				try {
+					Util.writeImage(visible,28,String.format("images/sample%d-step%d.ppm",smpl,s));
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		smpl++;
+		return visible;
+	}
+	
+//	/**
+//	 * Perform Gibbs sampling for sampleSteps number of steps using the training case as seed.
+//	 * @param trainingCase
+//	 * @param sampleSteps
+//	 * @return a matrix giving activations
+//	 */
 //	public DoubleMatrix sample(DataSet.Item trainingCase, int sampleSteps) {
 //		DoubleMatrix inputVector = trainingCase.asInputVector();
 //		DoubleMatrix hidden = sampleHiddenGivenVisible(inputVector);
