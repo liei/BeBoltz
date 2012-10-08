@@ -61,39 +61,7 @@ public class Rbm {
 	public double[][] getWeights(){
 		return weights;
 	}
-	
-//	/**
-//	 * Propagates the visible units activation upwards to the hidden units.
-//	 * @param visibleLayerActivation Array indicating the binary activation of the visible layer.
-//	 * @return activations of the hidden layer
-//	 */
-//	public DoubleMatrix propup(DoubleMatrix visibleLayerActivation) {
-//		assert(visibleLayerActivation.rows == numVisibleUnits) : 
-//			String.format("propup: %d != %d",visibleLayerActivation.columns,numVisibleUnits);
-//		
-//		DoubleMatrix stimuli = weights.mmul(visibleLayerActivation);
-//		stimuli.add(hiddenLayerBias);
-//		
-//		DoubleMatrix hiddenLayerActivation = sigmoid(stimuli);
-//		return hiddenLayerActivation;
-//	}
-//	
-//	/**
-//	 * Propagates the hidden units activation downwards to the visible units.
-//	 * @param visibleLayerActivation
-//	 * @return
-//	 */
-//	public DoubleMatrix propdown(DoubleMatrix hiddenLayerActivation) {
-//		assert(hiddenLayerActivation.rows == numHiddenUnits) :
-//			String.format("propdown: %d != %d",hiddenLayerActivation.columns,numHiddenUnits);
-//		
-//		DoubleMatrix stimuli = weights.transpose().mmul(hiddenLayerActivation);
-//		stimuli.add(visibleLayerBias);
-//		
-//		DoubleMatrix visibleLayerActivation = sigmoid(stimuli);
-//		return visibleLayerActivation;
-//	}
-		
+
 	/**
 	 * @param input Sum stimulus to node.
 	 * @return The activation of the given node.
@@ -101,121 +69,11 @@ public class Rbm {
 	public double sigmoid (double input) {
 		return 1 / (1 + Math.exp(-input));
 	}
-	
-//	/**
-//	 * Performs element-wise sigmoid on a DoubleMatrix, 
-//	 * returns a new DoubleMatrix 
-//	 * 
-//	 * @param vector (1,n) DoubleMatrix to perform sigmoid on
-//	 * @return a (1,n) DoubleMatrix.
-//	 */
-//	private DoubleMatrix sigmoid(DoubleMatrix vector) {
-//		assert(vector.columns == 1) : "Rbm.sigmoid, vector is not a column vector";
-//		DoubleMatrix layerActivation = DoubleMatrix.zeros(vector.length);
-//		double activation = 0;
-//		for (int nodeIndex = 0; nodeIndex < numHiddenUnits; nodeIndex++) {
-//			activation = sigmoid(vector.get(nodeIndex));
-//			layerActivation.put(nodeIndex, activation);
-//		}
-//		return layerActivation;
-//	}
-//	
-//	/**
-//	 * @param hidden   Index of hidden node.
-//	 * @param visible   Index of visible node
-//	 * @return The weight between the nodes.
-//	 */
-//	public double getWeight(int hidden, int visible) {
-//		return weights.get(hidden, visible);
-//	}
-//	
-//	/**
-//	 * @param nodeIndex Index of node.
-//	 * @return The weight to the bias node.
-//	 */
-//	public double getHiddenLayerBias(int nodeIndex) {
-//		return hiddenLayerBias.get(nodeIndex);
-//	}
-//	
-//	/**
-//	 * @param nodeIndex Index of node.
-//	 * @return The weight to the bias node.
-//	 */
-//	public double getVisibleLayerBias(int index) {
-//		return visibleLayerBias.get(index);
-//	}
-//	
-////	/**
-////	 * @param sample a sample from visible nodes
-////	 * @return The free energy of the sample
-////	 */
-////	public double freeEnergy(DoubleMatrix sample) {
-////		assert(sample.length == numVisibleNodes);
-////		DoubleMatrix stimuli = stimuli(sample, weights, hiddenLayerBias);
-////		double vbiasTerm = sample.dot(visibleLayerBias);
-////		double hiddenTerm = sum(log(DoubleMatrix.ones(numHiddenNodes).add(exp(stimuli))));
-////		return -hiddenTerm - vbiasTerm;
-////	}
-//
-////	/**
-////	 * When calculating the hidden layer stimulation use ship in weights.
-////	 * When calculating the visible layer stimulation ship in weights.transpose.
-////	 * @param input the input to the layer.
-////	 * @return A vector with stimulation levels for each node.
-////	 */
-////	private DoubleMatrix stimuli(DoubleMatrix input, DoubleMatrix weights,
-////			 DoubleMatrix bias) {
-////		assert(input.length == weights.rows);
-////		DoubleMatrix stimuli = input.transpose().mmul(weights);
-////		stimuli.add(bias);
-////		return stimuli;
-////	}
-//	
-//	/**
-//	 * Infers the state of visible units given hidden units.
-//	 * @param hiddenSample a sample of activation levels for hidden layer.
-//	 */
-//	public DoubleMatrix sampleVisibleGivenHidden(DoubleMatrix hiddenSample) {
-//		DoubleMatrix visibleActivation = propdown(hiddenSample);
-//		return toStochasticBinaryVector(visibleActivation);
-//	}
-//	
-//	/**
-//	 * Infers the state of hidden units given visible units.
-//	 * @param hiddenSample a sample of activation levels for hidden layer.
-//	 */
-//	public DoubleMatrix sampleHiddenGivenVisible(DoubleMatrix visibleSample) {
-//		DoubleMatrix visibleActivation = propup(visibleSample);
-//		return toStochasticBinaryVector(visibleActivation);
-//	}
-//	
-//	
-//	/**
-//	 * One step of Gibbs sampling, starting from visible layer.
-//	 * @param sample of visible layer
-//	 * @return activation of visible layer
-//	 */
-//	public DoubleMatrix gibbsVisibleHiddenVisible(DoubleMatrix visibleLayerSample) {
-//		DoubleMatrix hiddenLayerSample = sampleHiddenGivenVisible(visibleLayerSample);
-//		DoubleMatrix visibleActivation = sampleVisibleGivenHidden(hiddenLayerSample);
-//		return visibleActivation;
-//	}
-//	
-//	/**
-//	 * One step of Gibbs sampling, starting from hidden layer.
-//	 * @param sample of hidden layer
-//	 * @return activation of visible layer
-//	 */
-//	public DoubleMatrix gibbsHiddenVisibleHidden(DoubleMatrix hiddenLayerSample) {
-//		DoubleMatrix visibleLayerSample = sampleVisibleGivenHidden(hiddenLayerSample);
-//		DoubleMatrix hiddenLayerActivation = sampleHiddenGivenVisible(visibleLayerSample);
-//		return hiddenLayerActivation;
-//	}
 
-	
+
 	/**
 	 * Uses contrastive divergence to update the weights of the RBM.
-	 * @param trainingCases
+	 * @param trainingCases dataset containing the training cases to use.
 	 * @param epochs number of times to train on the training cases.
 	 */
 	public void train(DataSet trainingCases, int epochs) {
@@ -224,17 +82,6 @@ public class Rbm {
 			start = System.currentTimeMillis();
 			for (DataSet.Item trainingCase : trainingCases) {
 				rbmUpdate(trainingCase.image);
-//				DoubleMatrix v0 = trainingCase.asInputVector();
-//				DoubleMatrix h0 = sampleHiddenGivenVisible(v0); // positive phase
-//				
-//				DoubleMatrix v1 = sampleVisibleGivenHidden(h0);
-//				DoubleMatrix h1 = sampleHiddenGivenVisible(v1);
-//				
-//				DoubleMatrix foo = v0.mmul(h0.transpose());
-//				DoubleMatrix bar = v1.mmul(h1.transpose());
-//				
-//				DoubleMatrix weightChanges = foo.sub(bar);
-//				weights = weights.add(weightChanges.mul(learningRate));
 			}
 			stop = System.currentTimeMillis();
 			System.out.printf("epoch %d done... (%.2f s)%n",epoch,(stop-start)/1000);
@@ -358,21 +205,4 @@ public class Rbm {
 		smpl++;
 		return visible;
 	}
-	
-//	/**
-//	 * Perform Gibbs sampling for sampleSteps number of steps using the training case as seed.
-//	 * @param trainingCase
-//	 * @param sampleSteps
-//	 * @return a matrix giving activations
-//	 */
-//	public DoubleMatrix sample(DataSet.Item trainingCase, int sampleSteps) {
-//		DoubleMatrix inputVector = trainingCase.asInputVector();
-//		DoubleMatrix hidden = sampleHiddenGivenVisible(inputVector);
-//		DoubleMatrix visible = propdown(hidden);
-//		for (int i = 1; i < sampleSteps; i++) {
-//			hidden = sampleHiddenGivenVisible(sampleBinary(visible));
-//			visible = propdown(hidden);
-//		}
-//		return visible;
-//	}
 }
