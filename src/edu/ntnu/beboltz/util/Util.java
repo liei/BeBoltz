@@ -1,10 +1,13 @@
 package edu.ntnu.beboltz.util;
 
+import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.util.Arrays;
+
+import javax.imageio.ImageIO;
 
 import org.jblas.DoubleMatrix;
 
@@ -41,19 +44,37 @@ public class Util {
         }
 	}
 	
+	public static void writeImage2(double[][] imageArray, String imagefile) throws IOException {
+		int height = imageArray.length;
+		int width = imageArray[0].length;
+		BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
+		for(int i = 0; i < height; i++){
+			for(int j = 0; j < width; j++){
+				image.setRGB(j,i,probabilityAsGreyRgbInt(imageArray[i][j]));
+			}
+		}
+		ImageIO.write(image, "png", new File(imagefile + ".png"));
+	}
+	
+	private static int probabilityAsGreyRgbInt(double p) {
+		assert 0 <= p && p <= 1.0 : p + " is not a probability";
+		int grey = (int)p * 255;
+		return grey | grey << 8 | grey << 16;
+	}
+
 	public static void writeWeightImage(double[][] w, String imagefile) throws IOException {
 		double[] a = flatten(w);
 		scale(a);
 		System.out.printf("weights  rows: %d, cols: %d%n",w.length,w[0].length);
 		writeImage(a,w[0].length,imagefile);
 	}
-
+	
 	/**
 	 * Scales an array so that it's elements are between 0.0 and 1.0.
 	 * negative values are < 0.5
 	 * positive values are > 0.5
 	 * and zero is scaled    0.5.
-	 * @param a
+	 * @param a  the array to be scaled.
 	 */
 	private static void scale(double[] a) {
 		double min = a[0];
@@ -62,7 +83,6 @@ public class Util {
 			min = Math.min(min,a[i]);
 			max = Math.max(max,a[i]);
 		}
-		
 		
 		double scalingFactor = Math.max(-min,max) * 2;
 		for(int i = 0; i < a.length; i++){
@@ -86,13 +106,6 @@ public class Util {
 		}
 		return a;
 	}
-	
-	public static void writeWeightImage(DoubleMatrix w, String imagefile) throws IOException{
-		double[] a = w.toArray();
-		scale(a);
-		System.out.printf("weights  rows: %d, cols: %d%n",w.rows,w.columns);
-		writeImage(a,w.columns,imagefile);
-	}
 
 	public static void writeFilters(double[][] w, String imagefile) throws IOException {
 		double[][] filter = new double[28][28];
@@ -104,10 +117,6 @@ public class Util {
 			}
 			Util.writeWeightImage(filter, String.format("%s-filter%d.ppm",imagefile,f));
 		}
-	}
-	
-	public static void writeImage(DoubleMatrix w,String imagefile) throws IOException{
-		writeImage(w.data,w.columns,imagefile);
 	}
 	
 	private static String makeBorder(int n){
