@@ -46,7 +46,7 @@ public class Main {
 		sample(set, rbm, 10);
 		
 		Util.writeFilters(rbm.weights, "images/filters");
-		Util.writeWeightImage(rbm.weights, "weights.ppm");
+		Util.writeWeightImage(rbm.weights, "images/weights.ppm");
 	}
 
 	private static void sample(DataSet set, Rbm rbm, int samples) throws IOException {
