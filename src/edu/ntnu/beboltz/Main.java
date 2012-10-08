@@ -20,7 +20,7 @@ public class Main {
 
 		DataSet set = null;
 		try {
-			set = DataSet.loadWithLabels(DataSet.IMAGE_FILE, DataSet.LABEL_FILE,500).filter(1,8);
+			set = DataSet.loadWithLabels(DataSet.IMAGE_FILE, DataSet.LABEL_FILE);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -31,37 +31,34 @@ public class Main {
 		
 		start = System.currentTimeMillis();
 		int imageDimensions = set.getImageHeight() * set.getImageWidth();
-		Rbm rbm1 = new Rbm(imageDimensions, 250, LEARNING_RATE);
+		Rbm rbm = new Rbm(imageDimensions, 250, LEARNING_RATE);
 		
 		
 		System.out.print("Training...");
-		rbm1.train(set, EPOCHS);
+		rbm.train(set, EPOCHS);
 
 		
 		stop = System.currentTimeMillis();
 		System.out.printf(" done (%.2f s)%n",(stop-start)/1000);
 		
 		
-		start = System.currentTimeMillis();
-		System.out.print("Sampling...");
-		DataSet.Item randItem = set.randomItem();
-//		DoubleMatrix sample1 = rbm1.sample(randItem,1000);
 		
-		stop = System.currentTimeMillis();
-		System.out.printf(" done (%.2f s)%n",(stop-start)/1000);
+		sample(set, rbm, 10);
 		
-//		try {
-			long ts = System.currentTimeMillis();
-//			Util.writeImage(sample1.data,28, String.format("images/sample1-%d.ppm",ts));
-//			
-			double[][] w1 = rbm1.getWeights();
-			
-			Util.writeWeightImage(w1, String.format("images/weights1-%d.ppm",ts));
-//			
-//			
-//			System.out.println("Wrote images");
-//		} catch (IOException e) {
-//			System.out.println("FUCK!");
-//		}
+		Util.writeFilters(rbm.weights, "images/filters");
+		Util.writeWeightImage(rbm.weights, "weights.ppm");
+	}
+
+	private static void sample(DataSet set, Rbm rbm, int samples) throws IOException {
+		for(int i = 0; i < samples; i++){
+			double start = System.currentTimeMillis();
+			System.out.print("Sampling...");
+			DataSet.Item randItem = set.randomItem();
+			double[] sample = rbm.sample(randItem.image,1000);
+			double 	stop = System.currentTimeMillis();
+			System.out.printf(" done (%.2f s)%n",(stop-start)/1000);
+			Util.writeImage(randItem.image,28,String.format("images/rand-item-%d.ppm",i));
+			Util.writeImage(sample,28, String.format("images/sample-%d.ppm",i));
+		}
 	}
 }
