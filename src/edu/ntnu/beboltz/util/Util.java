@@ -42,41 +42,68 @@ public class Util {
 	}
 	
 	public static void writeWeightImage(double[][] w, String imagefile) throws IOException {
-		double[] a = new double[w.length * w[0].length];
-		for(int i = 1; i < w.length; i++){
-			for(int j = 1; j < w.length; j++){
-				a[i*w.length + j] = w[i][j];
-			}
-		}
+		double[] a = flatten(w);
+		scale(a);
+		System.out.printf("weights  rows: %d, cols: %d%n",w.length,w[0].length);
+		writeImage(a,w[0].length,imagefile);
+	}
+
+	/**
+	 * Scales an array so that it's elements are between 0.0 and 1.0.
+	 * negative values are < 0.5
+	 * positive values are > 0.5
+	 * and zero is scaled    0.5.
+	 * @param a
+	 */
+	private static void scale(double[] a) {
 		double min = a[0];
 		double max = a[0];
 		for(int i = 1; i < a.length; i++){
 			min = Math.min(min,a[i]);
 			max = Math.max(max,a[i]);
 		}
+		
+		
+		double scalingFactor = Math.max(-min,max) * 2;
 		for(int i = 0; i < a.length; i++){
-			a[i] -= min;
-			a[i] /= max - min;
+			a[i] /= scalingFactor;
+			a[i] += 0.5;
 		}
-		System.out.printf("weights  rows: %d, cols: %d%n",w.length,w[0].length);
-		writeImage(a,w[0].length,imagefile);
+	}
+	
+	/**
+	 * Flattens a two dimensional array to a 
+	 * one dimensional array.  
+	 * @param m  Two dimensional array.
+	 * @return   An array.
+	 */
+	public static double[] flatten(double[][] m){
+		double[] a = new double[m.length * m[0].length];
+		for(int i = 0; i < m.length; i++){
+			for(int j = 0; j < m[i].length; j++){
+				a[i*m[i].length + j] = m[i][j];
+			}
+		}
+		return a;
 	}
 	
 	public static void writeWeightImage(DoubleMatrix w, String imagefile) throws IOException{
 		double[] a = w.toArray();
-		double min = a[0];
-		double max = a[0];
-		for(int i = 1; i < a.length; i++){
-			min = Math.min(min,a[i]);
-			max = Math.max(max,a[i]);
-		}
-		for(int i = 0; i < a.length; i++){
-			a[i] -= min;
-			a[i] /= max - min;
-		}
+		scale(a);
 		System.out.printf("weights  rows: %d, cols: %d%n",w.rows,w.columns);
 		writeImage(a,w.columns,imagefile);
-		
+	}
+
+	public static void writeFilters(double[][] w, String imagefile) throws IOException {
+		double[][] filter = new double[28][28];
+		for(int f = 0; f < w.length; f++){
+			for(int i = 0; i < 28; i++){
+				for(int j = 0; j < 28; j++){
+					filter[i][j] = w[f][i*28 + j];
+				}
+			}
+			Util.writeWeightImage(filter, String.format("%s-filter%d.ppm",imagefile,f));
+		}
 	}
 	
 	public static void writeImage(DoubleMatrix w,String imagefile) throws IOException{
