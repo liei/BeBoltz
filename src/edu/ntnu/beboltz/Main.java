@@ -1,8 +1,10 @@
 package edu.ntnu.beboltz;
 
+import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 
-import org.jblas.DoubleMatrix;
+import javax.imageio.ImageIO;
 
 import edu.ntnu.beboltz.rbm.Rbm;
 import edu.ntnu.beboltz.util.DataSet;
@@ -31,7 +33,7 @@ public class Main {
 		
 		start = System.currentTimeMillis();
 		int imageDimensions = set.getImageHeight() * set.getImageWidth();
-		Rbm rbm = new Rbm(imageDimensions, 250, LEARNING_RATE);
+		Rbm rbm = new Rbm(250, imageDimensions, LEARNING_RATE);
 		
 		
 		System.out.print("Training...");
@@ -45,8 +47,9 @@ public class Main {
 		
 		sample(set, rbm, 10);
 		
-		Util.writeFilters(rbm.weights, "images/filters");
-		Util.writeWeightImage(rbm.weights, "images/weights.ppm");
+		BufferedImage filters = Util.makeFilterImage(rbm.weights,28);
+		ImageIO.write(filters, "png",new File("images/filters.png"));
+		Util.writeWeightImage(rbm.weights, "images/weights");
 	}
 
 	private static void sample(DataSet set, Rbm rbm, int samples) throws IOException {
