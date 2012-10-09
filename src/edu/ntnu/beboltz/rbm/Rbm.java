@@ -1,5 +1,6 @@
 package edu.ntnu.beboltz.rbm;
 
+import java.util.Arrays;
 import java.util.Random;
 
 import edu.ntnu.beboltz.util.DataSet;
@@ -9,6 +10,7 @@ import edu.ntnu.beboltz.util.Util;
 public class Rbm {
 	
 	
+	private static final int NUM_LABELS = 10;
 	private int numHiddenUnits;
 	private int numVisibleUnits;
 
@@ -72,6 +74,24 @@ public class Rbm {
 			}
 			stop = System.currentTimeMillis();
 			System.out.printf("epoch %d done... (%.2f s)%n",epoch,(stop-start)/1000);
+		}
+	}
+	
+	public void trainSupervised(DataSet trainingCases, int epochs) {
+		if(!trainingCases.isLabeled())
+			throw new IllegalArgumentException("The training cases must be labeled");
+
+		double start, stop;
+		for (int epoch = 0; epoch < epochs; epoch++) {
+			System.out.printf("  epoch %d...",epoch);
+			start = System.currentTimeMillis();
+			for (DataSet.Item trainingCase : trainingCases) {
+				double[] input = Arrays.copyOf(trainingCase.image,trainingCase.image.length + NUM_LABELS);
+				input[trainingCase.image.length + trainingCase.label] = 1.0;
+				rbmUpdate(input);
+			}
+			stop = System.currentTimeMillis();
+			System.out.printf(" done (%.2f s)%n",(stop-start)/1000);
 		}
 	}
 	
@@ -141,7 +161,6 @@ public class Rbm {
 			hiddenLayerBias[i] += learningRate * (h1[i] - q2[i]);
 		}
 	}
-
 	
 	public double[] sample(double[] startSample, int sampleSteps){
 		double[] hidden  = new double[numHiddenUnits];
