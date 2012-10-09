@@ -20,22 +20,21 @@ public class Rbm {
 	private double learningRate;
 	/**
 	 * @param numHiddenUnits  Number of hidden nodes in RBM
-	 * @param numVisibleUnits Number of visible nodes in RBM
+	 * @param numVisibleNodes Number of visible nodes in RBM
 	 * 
 	 */
-	public Rbm(int numHiddenUnits, int numVisibleUnits, double learningRate) {
-		assert(numVisibleUnits > 0 && numHiddenUnits > 0);
+	public Rbm(int numHiddenUnits, int numVisibleNodes, double learningRate) {
+		assert(numVisibleNodes > 0 && numHiddenUnits > 0);
 		Random random = new Random();
 
 		this.learningRate = learningRate;
 		
 		this.numHiddenUnits = numHiddenUnits;
-		this.numVisibleUnits = numVisibleUnits;
+		this.numVisibleUnits = numVisibleNodes;
 		
-		weights = new double[numHiddenUnits][numVisibleUnits];
-		//TODO page 9 in practical guide
-		double high = 4 * Math.sqrt(6.0 / (numHiddenUnits + numVisibleUnits));
-		double low = -high;
+		weights = new double[numHiddenUnits][numVisibleNodes];
+		double high =  4 * Math.sqrt(6.0 / (numHiddenUnits + numVisibleNodes));
+		double low  = -high;
 		for (int i = 0; i < weights.length; i++) {
 			for (int j = 0; j < weights[i].length; j++) {
 				weights[i][j] = low + (high - low) * random.nextDouble();
@@ -116,7 +115,6 @@ public class Rbm {
 			x2[j] = p2[j] > Math.random() ? 1.0 : 0.0;
 		}
 		
-		
 //		for all hidden units i do
 //			compute Q(h2i = 1|x2 ) (for binomial units, sigm(ci + sum(Wijx2j)
 		double[] q2 = new double[numHiddenUnits];
@@ -127,9 +125,6 @@ public class Rbm {
 			}
 			q2[i] = sigmoid(hiddenLayerBias[i] + sum);
 		}
-
-		
-		
 		
 		// W ← W + e(h1 x′ − Q(h2· = 1|x2 )x′ )
 		for(int i = 0; i < weights.length; i++){
@@ -147,11 +142,12 @@ public class Rbm {
 		}
 	}
 
-	public double[] sample(double[] sample, int sampleSteps){
+	
+	public double[] sample(double[] startSample, int sampleSteps){
 		double[] hidden  = new double[numHiddenUnits];
 		double[] visible = new double[numVisibleUnits];
 		
-		System.arraycopy(sample, 0, visible, 0, sample.length);
+		System.arraycopy(startSample, 0, visible, 0, startSample.length);
 		for(int s = 0; s < sampleSteps; s++){
 
 			for(int i = 0; i < numHiddenUnits; i++){
