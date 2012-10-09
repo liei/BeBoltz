@@ -1,13 +1,7 @@
 package edu.ntnu.beboltz.rbm;
-import static edu.ntnu.beboltz.util.MatrixUtil.*;
 
-
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Random;
 
-import org.jblas.DoubleMatrix;
 import edu.ntnu.beboltz.util.DataSet;
 import edu.ntnu.beboltz.util.Util;
 
@@ -79,12 +73,6 @@ public class Rbm {
 			}
 			stop = System.currentTimeMillis();
 			System.out.printf("epoch %d done... (%.2f s)%n",epoch,(stop-start)/1000);
-			try {
-				Util.writeWeightImage(weights, String.format("images/weights-%d.ppm",epoch));
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
 		}
 	}
 	
@@ -159,18 +147,11 @@ public class Rbm {
 		}
 	}
 
-	private static int smpl = 0;
-	
 	public double[] sample(double[] sample, int sampleSteps){
 		double[] hidden  = new double[numHiddenUnits];
 		double[] visible = new double[numVisibleUnits];
 		
 		System.arraycopy(sample, 0, visible, 0, sample.length);
-		try {
-			Util.writeImage(sample, 28, String.format("images/sample%d-case.ppm",smpl));
-		} catch (IOException e1) {
-			e1.printStackTrace();
-		}
 		for(int s = 0; s < sampleSteps; s++){
 
 			for(int i = 0; i < numHiddenUnits; i++){
@@ -188,15 +169,7 @@ public class Rbm {
 				}
 				visible[j] = sigmoid(visibleLayerBias[j] + sum);
 			}
-			if(s % 100 == 0){
-				try {
-					Util.writeImage(visible,28,String.format("images/sample%d-step%d.ppm",smpl,s));
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
 		}
-		smpl++;
 		return visible;
 	}
 }
