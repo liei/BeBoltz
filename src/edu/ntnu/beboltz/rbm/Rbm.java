@@ -47,12 +47,6 @@ public class Rbm {
 				weights[i][j] = low + (high - low) * random.nextDouble();
 			}
 		}
-		try {
-			Util.writeWeightImage(weights, "images/initw.ppm");
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 		hiddenLayerBias = Util.zeros(numHiddenUnits);
 		visibleLayerBias = Util.zeros(numVisibleUnits);
 
