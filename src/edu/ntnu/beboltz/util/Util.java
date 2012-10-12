@@ -3,65 +3,13 @@ package edu.ntnu.beboltz.util;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
+
 import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 
 public class Util {
 
-	public static final int BORDER_SIZE = 5;
-	public static final String BORDER_COLOR = "128  80 200 ";
-	public static final String BORDER = makeBorder(5);
-
-	@Deprecated
-	public static void writeImage(double[] img, int width, String imagefile) throws IOException{
-        PrintWriter imgOut = null;
-        try {
-            imgOut = new PrintWriter(new FileWriter(imagefile));
-
-            int rows = img.length / width;
-            int cols = width;
-            imgOut.println("P3");
-            imgOut.println((cols + BORDER_SIZE*2) + " " + (rows + BORDER_SIZE*2) + " 255");
-            String top = makeBorder(cols + BORDER_SIZE*2);
-            for(int i = 0; i < BORDER_SIZE;i++)
-            	imgOut.println(top);
-            for (int i = 0; i < rows; i++) {
-            	imgOut.print(BORDER);
-                for (int j = 0; j < cols; j++) {
-                	int grey = (int) (img[i*width + j] * 255);
-                    imgOut.printf("%1$3d %1$3d %1$3d ",grey);
-                }
-                imgOut.println(BORDER);
-            }
-            for(int i = 0; i < BORDER_SIZE;i++)
-            	imgOut.println(top);
-        } finally {
-            imgOut.close();
-        }
-	}
-	
-	@Deprecated
-	public static void writeWeightImage(double[][] w, String imagefile) throws IOException {
-		double[] a = flatten(w);
-		scale(a);
-		writeImage(a,w[0].length,imagefile);
-	}
-	
-	@Deprecated
-	public static void writeFilters(double[][] w, String imagefile) throws IOException {
-		double[][] filter = new double[28][28];
-		for(int f = 0; f < w.length; f++){
-			for(int i = 0; i < 28; i++){
-				for(int j = 0; j < 28; j++){
-					filter[i][j] = w[f][i*28 + j];
-				}
-			}
-			Util.writeWeightImage(filter, String.format("%s-filter%d.ppm",imagefile,f));
-		}
-	}
-	
 	public static BufferedImage makeImage(double[] imageArray,int width) {
 		int height = imageArray.length / width;
 		BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
@@ -123,51 +71,79 @@ public class Util {
 		return a;
 	}
 	
-	public static BufferedImage makeFilterImage(double[][] w, int filterWidth){
-		int border = 5;
-		int grid = 2;
+	public static BufferedImage makeFilterImage(double[][] w, 
+			int m, int n, int filterWidth, int filterHeight) {
+		List<BufferedImage> filters = new LinkedList<BufferedImage>();
+		for(int i = 0; i < w.length; i++){
+			double[] filterArray = Util.scale(Arrays.copyOf(w[i],w[i].length));
+			BufferedImage filter = Util.makeImage(filterArray,filterWidth);
+			filters.add(filter);
+		}
+		BufferedImage filterImage = Util.makeTiledImage(filters,m,n,filterWidth,filterHeight);
+		return filterImage;
+	}
+	
+	public static BufferedImage makeTiledImage(Iterable<BufferedImage> tiles, int m, int n){
+		int tileWidth = 0;
+		int tileHeight = 0;
+		for(BufferedImage tile : tiles){
+			tileWidth  = Math.max(tileWidth, tile.getWidth());
+			tileHeight = Math.max(tileHeight, tile.getHeight());
+		}
+		return makeTiledImage(tiles,m,n,tileWidth,tileHeight);
+	}
+	
+	public static BufferedImage makeTiledImage(Iterable<BufferedImage> tiles,
+			int m, int n, int tileWidth, int tileHeight) {
+		BufferedImage image = new BufferedImage(m*tileWidth,n*tileHeight,BufferedImage.TYPE_3BYTE_BGR); 
 		
-		int numFilters = w.length;
-		int filterHeight = w[0].length / filterWidth;
-		
-		int m = (int)Math.sqrt(numFilters);
-		int n = numFilters / m;
-		int imageHeight = m * filterHeight + (m-1) * grid + 2 * border;
-		int imageWidth  = n * filterWidth  + (n-1) * grid + 2 * border; 
-		BufferedImage filters = new BufferedImage(imageWidth,imageHeight,BufferedImage.TYPE_3BYTE_BGR); 
-		Graphics g = filters.getGraphics();
-		g.setColor(Color.CYAN);
-		g.fillRect(0,0,imageWidth,imageHeight);
-		int f = 0;
-		OUTER_LOOP:
-		for(int i = 0; i < n; i++){
-			for(int j = 0; j < m; j++){
-				double[] filterArray = scale(Arrays.copyOf(w[f],w[f].length));
-				BufferedImage filter = makeImage(filterArray,filterWidth);
-				int x = i * filterWidth + (i-1) * grid + border; 
-				int y = j * filterWidth + (j-1) * grid + border;
-				g.drawImage(filter, x, y, x + filterWidth, y + filterHeight, 0, 0, filterWidth, filterHeight, null);
-				f++;
-				if(f >= w.length){
-					break OUTER_LOOP;
-				}
+		Graphics g = image.getGraphics();
+		int i = 0;
+		int j = 0;
+		for(BufferedImage tile : tiles){
+			int x = i * tileWidth; 
+			int y = j * tileHeight;
+			g.drawImage(tile, x, y, x + tileWidth, y + tileHeight, 0, 0, tileWidth, tileHeight, null);
+			i++;
+			if(i >= m){
+				j++;
+				i = 0;
 			}
 		}
-		return filters;
+		return image;
+	}
+
+	
+	public static double sigmoid(double x){
+		return 1.0 / (1.0 + Math.exp(-x));
 	}
 	
-	private static String makeBorder(int n){
-		StringBuilder sb = new StringBuilder();
-		while(n-- > 0){
-			sb.append(BORDER_COLOR);
+	public static double[] softmax(double[][] w, double[] x, double[] b){
+		double[] y = new double[b.length];
+		double sum = 0;
+		for(int j = 0; j < w.length; j++){
+			y[j] = Math.exp(dot(w[j],x) + b[j]);
+			sum += y[j];
 		}
-		return sb.toString();
+		for(int i = 0; i < w.length; i++){
+			y[i] /= sum;
+		}
+		return y;
 	}
 	
-	public static double[] ones(int length){
-		double[] a = new double[length];
-		Arrays.fill(a,1.0);
-		return a;
+	public static double dot(double[] v1, double[] v2){
+		assert(v1.length == v2.length) : "Util.dot - v1 and v2 not the same length";
+		double sum = 0;
+		for(int i = 0; i < v1.length; i++){
+			sum = v1[i] * v2[i];
+		}
+		return sum;
+	}
+	
+	public static void fill(double[][] a, double e){
+		for(int i = 0; i < a.length; i++){
+			Arrays.fill(a[i], e);
+		}
 	}
 	
 	public static double[] zeros(int length){
@@ -175,4 +151,23 @@ public class Util {
 		Arrays.fill(a,0.0);
 		return a;
 	}
+	
+	public static double[][] zeroes(int m,int n) {
+		double[][] a = new double[m][n];
+		fill(a,0.0);
+		return a;
+	}
+
+	public static double[] ones(int length){
+		double[] a = new double[length];
+		Arrays.fill(a,1.0);
+		return a;
+	}
+	
+	public static double[][] ones(int m,int n) {
+		double[][] a = new double[m][n];
+		fill(a,1.0);
+		return a;
+	}
+	
 }
