@@ -3,7 +3,6 @@ package edu.ntnu.beboltz;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 
 import javax.imageio.ImageIO;
 
@@ -14,7 +13,7 @@ import edu.ntnu.beboltz.util.Util;
 public class Main {
 	
 	private static final double LEARNING_RATE = 0.1;
-	private static final int EPOCHS = 10;
+	private static final int EPOCHS = 2;
 	private static final int NUM_HIDDEN_UNITS = 250;
 
 	public static void main(String[] args) throws IOException {
@@ -50,8 +49,8 @@ public class Main {
 		System.out.printf(" done (%.2f s)%n",(stop-start)/1000);
 //		sample(set, rbm, 10);
 		
-		BufferedImage filters = Util.makeFilterImage(rbm.weights,28);
-		ImageIO.write(filters, "png",new File("images/filters.png"));
+		BufferedImage filterImage = Util.makeFilterImage(rbm.getWeights(),25,10,28,28);
+		ImageIO.write(filterImage, "png",new File("images/filters.png"));
 	}
 
 	private static void testClassification(DataSet testSet, Rbm rbm){
@@ -69,7 +68,7 @@ public class Main {
 				wrong++;
 				BufferedImage image = Util.makeImage(item.image, 28);
 				try {
-					ImageIO.write(image, "png", new File(String.format("wrong%d.png", i)));
+					ImageIO.write(image, "png", new File(String.format("images/wrong%d-guess%d.png", i, label)));
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -80,7 +79,7 @@ public class Main {
 	}
 	
 	private static int classify(DataSet.Item item, Rbm rbm, double[] ps){
-		double[] sample = rbm.sample(item.image,10);
+		double[] sample = rbm.sample(item.image,1000);
 		
 		int n = item.image.length;
 		double maxProb = 0;
