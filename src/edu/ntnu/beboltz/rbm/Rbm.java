@@ -3,8 +3,8 @@ package edu.ntnu.beboltz.rbm;
 import java.util.Arrays;
 import java.util.Random;
 
+import edu.ntnu.beboltz.util.ArrayUtil;
 import edu.ntnu.beboltz.util.DataSet;
-import edu.ntnu.beboltz.util.Util;
 
 
 public class Rbm {
@@ -42,8 +42,8 @@ public class Rbm {
 				weights[i][j] = low + (high - low) * random.nextDouble();
 			}
 		}
-		hiddenLayerBias = Util.zeros(numHiddenUnits);
-		visibleLayerBias = Util.zeros(numVisibleUnits);
+		hiddenLayerBias = ArrayUtil.zeros(numHiddenUnits);
+		visibleLayerBias = ArrayUtil.zeros(numVisibleUnits);
 
 	}
 	

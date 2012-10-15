@@ -1,6 +1,6 @@
 package edu.ntnu.beboltz.logreg;
 
-import edu.ntnu.beboltz.util.Util;
+import edu.ntnu.beboltz.util.ArrayUtil;
 
 public class LogisticRegression {
 
@@ -15,7 +15,7 @@ public class LogisticRegression {
 		this.numInputs = numInputs;
 		this.numCategories = numCategories;
 		
-		weights = Util.zeroes(numInputs,numCategories);
+		weights = ArrayUtil.zeroes(numInputs,numCategories);
 		bias = new double[numCategories];
 	}
 	

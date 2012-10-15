@@ -130,6 +130,7 @@ public class Util {
 		}
 		return y;
 	}
+
 	
 	public static double dot(double[] v1, double[] v2){
 		assert(v1.length == v2.length) : "Util.dot - v1 and v2 not the same length";
@@ -139,35 +140,4 @@ public class Util {
 		}
 		return sum;
 	}
-	
-	public static void fill(double[][] a, double e){
-		for(int i = 0; i < a.length; i++){
-			Arrays.fill(a[i], e);
-		}
-	}
-	
-	public static double[] zeros(int length){
-		double[] a = new double[length];
-		Arrays.fill(a,0.0);
-		return a;
-	}
-	
-	public static double[][] zeroes(int m,int n) {
-		double[][] a = new double[m][n];
-		fill(a,0.0);
-		return a;
-	}
-
-	public static double[] ones(int length){
-		double[] a = new double[length];
-		Arrays.fill(a,1.0);
-		return a;
-	}
-	
-	public static double[][] ones(int m,int n) {
-		double[][] a = new double[m][n];
-		fill(a,1.0);
-		return a;
-	}
-	
 }
