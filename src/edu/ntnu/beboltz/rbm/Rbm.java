@@ -22,20 +22,20 @@ public class Rbm {
 	private double learningRate;
 	/**
 	 * @param numHiddenUnits  Number of hidden nodes in RBM
-	 * @param numVisibleNodes Number of visible nodes in RBM
+	 * @param numVisibleUnits Number of visible nodes in RBM
 	 * 
 	 */
-	public Rbm(int numHiddenUnits, int numVisibleNodes, double learningRate) {
-		assert(numVisibleNodes > 0 && numHiddenUnits > 0);
+	public Rbm(int numHiddenUnits, int numVisibleUnits, double learningRate) {
+		assert(numVisibleUnits > 0 && numHiddenUnits > 0);
 		Random random = new Random();
 
 		this.learningRate = learningRate;
 		
 		this.numHiddenUnits = numHiddenUnits;
-		this.numVisibleUnits = numVisibleNodes;
+		this.numVisibleUnits = numVisibleUnits;
 		
-		weights = new double[numHiddenUnits][numVisibleNodes];
-		double high =  4 * Math.sqrt(6.0 / (numHiddenUnits + numVisibleNodes));
+		weights = new double[numHiddenUnits][numVisibleUnits];
+		double high =  4 * Math.sqrt(6.0 / (numHiddenUnits + numVisibleUnits));
 		double low  = -high;
 		for (int i = 0; i < weights.length; i++) {
 			for (int j = 0; j < weights[i].length; j++) {
