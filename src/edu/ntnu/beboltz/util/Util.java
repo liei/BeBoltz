@@ -118,7 +118,7 @@ public class Util {
 		return 1.0 / (1.0 + Math.exp(-x));
 	}
 	
-	public static double[] softmax(double[][] w, double[] x, double[] b){
+	public static double[] softmax(double[][] w, double[] b, double[] x){
 		double[] y = new double[b.length];
 		double sum = 0;
 		for(int j = 0; j < w.length; j++){
