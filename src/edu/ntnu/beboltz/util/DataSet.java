@@ -17,61 +17,60 @@ public class DataSet implements Iterable<DataSet.Item>{
 
 	public static final String IMAGE_FILE = "data/train-images-idx3-ubyte";
 	public static final String LABEL_FILE = "data/train-labels-idx1-ubyte";
-	
-	private List<Item> items;
+    private static final double MAX_PIXEL_VALUE = 255.0;
+
+    private List<Item> items;
 	
 	private int imageWidth;
 	private int imageHeight;
 	
 	private boolean hasLabels = false;
 	
-	private DataSet (List<Item> items,int w, int h,boolean hasLabels){
+	private DataSet (List<Item> items,int width, int height, boolean hasLabels){
 		this.items = items;
-		imageWidth = w;
-		imageHeight = h;
+		imageWidth = width;
+		imageHeight = height;
 		this.hasLabels = hasLabels;
 	};
 	
-	public static DataSet load(String imagefile) throws IOException{
-		return loadWithLabels(imagefile,null);
+	public static DataSet load(String imageFile) throws IOException{
+		return loadWithLabels(imageFile,null);
 	}
 	
-	public static DataSet loadWithLabels(String imagefile, String labelfile) throws IOException{
-		return loadWithLabels(imagefile, labelfile, -1);
+	public static DataSet loadWithLabels(String imageFile, String labelFile) throws IOException{
+		return loadWithLabels(imageFile, labelFile, -1);
 	}
 	
-	public static DataSet loadWithLabels(String imagefile, String labelfile, int cases) throws IOException{
-		MnistManager manager = new MnistManager(imagefile,labelfile);
+	public static DataSet loadWithLabels(String imageFile, String labelFile, int cases) throws IOException{
+		MnistManager manager = new MnistManager(imageFile,labelFile);
 		
 		MnistImageFile images = manager.getImages();
 		MnistLabelFile labels = manager.getLabels();
 		int numItems = cases < 0 ? images.getCount() : cases;
 
-
-		int w = images.getCols();
-		int h = images.getRows();
+		int width = images.getCols();
+		int height = images.getRows();
 		boolean hasLabels = labels != null;
 		List<Item> items = new ArrayList<Item>(numItems);
 
-		while(--numItems > 0){
+        for (; numItems > 0; numItems--) {
 			int[][] image = images.readImage();
-			double[] a = new double[image.length * image[0].length];
-			for (int i = 0; i < image.length; i++) {
-				for (int j = 0; j < image[0].length; j++) {
-					a[i*image.length + j] = image[i][j] / 255.0;
+			double[] a = new double[width * height];
+			for (int i = 0; i < width; i++) {
+				for (int j = 0; j < height; j++) {
+					a[i*width + j] = image[i][j] / MAX_PIXEL_VALUE;
 				}
 			}
-			
+
 			int label = -1;
 			if(hasLabels){
 				label = labels.readLabel();
 			}
 			items.add(new DataSet.Item(a,label));
 		}
-		
-		return new DataSet(items,w,h,hasLabels);
+		return new DataSet(items, width, height, hasLabels);
 	}
-	
+
 	public DataSet filter(int... labels){
 		if(!isLabeled())
 			throw new IllegalStateException("Can't filter on DataSet with no labels");
@@ -130,7 +129,7 @@ public class DataSet implements Iterable<DataSet.Item>{
 		}
 		
 		/**
-		 * Assumes the image data has been normalized to fall in the interval [0,1] to be interpreted as 
+		 * Assumes the image data has been normalized to fall in the interval [0,1] to be interpreted as
 		 * probabilities. 
 		 * @return A binary vector representing the activation level of each node in the visible layer.
 		 */
