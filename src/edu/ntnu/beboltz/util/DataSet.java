@@ -15,11 +15,14 @@ import mnist.tools.MnistManager;
 
 public class DataSet implements Iterable<DataSet.Item>{
 
-	public static final String IMAGE_FILE = "data/train-images-idx3-ubyte";
-	public static final String LABEL_FILE = "data/train-labels-idx1-ubyte";
+    public static final String IMAGE_FILE  = "data/train-images-idx3-ubyte";
+    public static final String LABEL_FILE  = "data/train-labels-idx1-ubyte";
+    public static final String TEST_IMAGES = "data/t10k-images-idx3-ubyte";
+    public static final String TEST_LABELS = "data/t10k-labels-idx1-ubyte";
     private static final double MAX_PIXEL_VALUE = 255.0;
 
-    private List<Item> items;
+	private List<Item> items;
+
 	
 	private int imageWidth;
 	private int imageHeight;

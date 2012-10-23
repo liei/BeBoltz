@@ -1,20 +1,16 @@
 package edu.ntnu.beboltz.rbm;
-import static edu.ntnu.beboltz.util.MatrixUtil.*;
 
-
-import java.io.IOException;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Random;
 
-import org.jblas.DoubleMatrix;
+import edu.ntnu.beboltz.util.ArrayUtil;
 import edu.ntnu.beboltz.util.DataSet;
-import edu.ntnu.beboltz.util.Util;
 
 
 public class Rbm {
 	
 	
+	private static final int NUM_LABELS = 10;
 	private int numHiddenUnits;
 	private int numVisibleUnits;
 
@@ -25,36 +21,29 @@ public class Rbm {
 
 	private double learningRate;
 	/**
-	 * @param numVisibleNodes Number of visible nodes in RBM
-	 * @param numHiddenNodes  Number of hidden nodes in RBM
+	 * @param numHiddenUnits  Number of hidden nodes in RBM
+	 * @param numVisibleUnits Number of visible nodes in RBM
 	 * 
 	 */
-	public Rbm(int numVisibleNodes, int numHiddenNodes, double learningRate) {
-		assert(numVisibleNodes > 0 && numHiddenNodes > 0);
+	public Rbm(int numHiddenUnits, int numVisibleUnits, double learningRate) {
+		assert(numVisibleUnits > 0 && numHiddenUnits > 0);
 		Random random = new Random();
 
 		this.learningRate = learningRate;
 		
-		this.numHiddenUnits = numHiddenNodes;
-		this.numVisibleUnits = numVisibleNodes;
+		this.numHiddenUnits = numHiddenUnits;
+		this.numVisibleUnits = numVisibleUnits;
 		
-		weights = new double[numHiddenNodes][numVisibleNodes];
-		//TODO page 9 in practical guide
-		double high = 4 * Math.sqrt(6.0 / (numHiddenNodes + numVisibleNodes));
-		double low = -high;
+		weights = new double[numHiddenUnits][numVisibleUnits];
+		double high =  4 * Math.sqrt(6.0 / (numHiddenUnits + numVisibleUnits));
+		double low  = -high;
 		for (int i = 0; i < weights.length; i++) {
 			for (int j = 0; j < weights[i].length; j++) {
 				weights[i][j] = low + (high - low) * random.nextDouble();
 			}
 		}
-		try {
-			Util.writeWeightImage(weights, "images/initw.ppm");
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		hiddenLayerBias = Util.zeros(numHiddenUnits);
-		visibleLayerBias = Util.zeros(numVisibleUnits);
+		hiddenLayerBias = ArrayUtil.zeros(numHiddenUnits);
+		visibleLayerBias = ArrayUtil.zeros(numVisibleUnits);
 
 	}
 	
@@ -85,12 +74,24 @@ public class Rbm {
 			}
 			stop = System.currentTimeMillis();
 			System.out.printf("epoch %d done... (%.2f s)%n",epoch,(stop-start)/1000);
-			try {
-				Util.writeWeightImage(weights, String.format("images/weights-%d.ppm",epoch));
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+		}
+	}
+	
+	public void trainSupervised(DataSet trainingCases, int epochs) {
+		if(!trainingCases.isLabeled())
+			throw new IllegalArgumentException("The training cases must be labeled");
+
+		double start, stop;
+		for (int epoch = 0; epoch < epochs; epoch++) {
+			System.out.printf("  epoch %d...",epoch);
+			start = System.currentTimeMillis();
+			for (DataSet.Item trainingCase : trainingCases) {
+				double[] input = Arrays.copyOf(trainingCase.image,trainingCase.image.length + NUM_LABELS);
+				input[trainingCase.image.length + trainingCase.label] = 1.0;
+				rbmUpdate(input);
 			}
+			stop = System.currentTimeMillis();
+			System.out.printf(" done (%.2f s)%n",(stop-start)/1000);
 		}
 	}
 	
@@ -134,7 +135,6 @@ public class Rbm {
 			x2[j] = p2[j] > Math.random() ? 1.0 : 0.0;
 		}
 		
-		
 //		for all hidden units i do
 //			compute Q(h2i = 1|x2 ) (for binomial units, sigm(ci + sum(Wijx2j)
 		double[] q2 = new double[numHiddenUnits];
@@ -145,9 +145,6 @@ public class Rbm {
 			}
 			q2[i] = sigmoid(hiddenLayerBias[i] + sum);
 		}
-
-		
-		
 		
 		// W ← W + e(h1 x′ − Q(h2· = 1|x2 )x′ )
 		for(int i = 0; i < weights.length; i++){
@@ -164,19 +161,12 @@ public class Rbm {
 			hiddenLayerBias[i] += learningRate * (h1[i] - q2[i]);
 		}
 	}
-
-	private static int smpl = 0;
 	
-	public double[] sample(double[] sample, int sampleSteps){
+	public double[] sample(double[] startSample, int sampleSteps){
 		double[] hidden  = new double[numHiddenUnits];
 		double[] visible = new double[numVisibleUnits];
 		
-		System.arraycopy(sample, 0, visible, 0, sample.length);
-		try {
-			Util.writeImage(sample, 28, String.format("images/sample%d-case.ppm",smpl));
-		} catch (IOException e1) {
-			e1.printStackTrace();
-		}
+		System.arraycopy(startSample, 0, visible, 0, startSample.length);
 		for(int s = 0; s < sampleSteps; s++){
 
 			for(int i = 0; i < numHiddenUnits; i++){
@@ -194,15 +184,7 @@ public class Rbm {
 				}
 				visible[j] = sigmoid(visibleLayerBias[j] + sum);
 			}
-			if(s % 100 == 0){
-				try {
-					Util.writeImage(visible,28,String.format("images/sample%d-step%d.ppm",smpl,s));
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
 		}
-		smpl++;
 		return visible;
 	}
 }
