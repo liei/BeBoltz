@@ -113,30 +113,57 @@ public class Util {
 		return image;
 	}
 
-	
 	public static double sigmoid(double x){
 		return 1.0 / (1.0 + Math.exp(-x));
 	}
 	
-	public static double[] softmax(double[][] w, double[] b, double[] x){
-		double[] y = new double[b.length];
-		double sum = 0;
-		for(int j = 0; j < w.length; j++){
-			y[j] = Math.exp(dot(w[j],x) + b[j]);
-			sum += y[j];
+	public static double[] softmax(double[][] w, double[] b, double[] x) {
+	    double[] xs = new double[b.length];
+	    for(int j = 0; j < w.length; j++){
+			xs[j] = dot(w[j],x) + b[j];
 		}
-		for(int i = 0; i < w.length; i++){
-			y[i] /= sum;
-		}
-		return y;
+	    
+	    
+		double max = max(xs);
+	    
+		
+	    double Z = 0.0;
+	    double[] ps = new double[xs.length];
+	    for (int i = 0; i < xs.length; ++i){
+	    	ps[i] = Math.exp(xs[i] - max); 
+	        Z += ps[i];
+	    }
+	    test(ps,"2");
+
+	    for (int i = 0; i < ps.length; ++i){
+	        ps[i] /= Z;
+	    }
+
+	    test(ps,"3");
+	    return ps;
 	}
 
+
+	private static void test(double[] xs,String s) {
+		for(int i = 0; i < xs.length; i++){
+	    	assert !Double.isNaN(xs[i]) : String.format("%s:xs[%d] is NaN",s,i);
+	    	assert !Double.isInfinite(xs[i]) : String.format("%s:xs[%d] is NaN",s,i);
+	    }
+	}
+
+	private static double max(double... xs) {
+		double max = xs[0];
+	    for (int i = 1; i < xs.length; ++i){
+	    	max = Math.max(max, xs[i]);
+	    }
+		return max;
+	}
 	
 	public static double dot(double[] v1, double[] v2){
 		assert(v1.length == v2.length) : "Util.dot - v1 and v2 not the same length";
 		double sum = 0;
 		for(int i = 0; i < v1.length; i++){
-			sum = v1[i] * v2[i];
+			sum += v1[i] * v2[i];
 		}
 		return sum;
 	}
