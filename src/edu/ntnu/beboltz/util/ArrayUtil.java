@@ -125,4 +125,44 @@ public class ArrayUtil {
 		}
 		return a;
 	}
+	
+	public static void normalize(double[][] a){
+		double min = a[0][0];
+		double max = a[0][0];
+		for(int i = 0; i < a.length; i++){
+			for(int j = 0; j < a[i].length; j++){
+				min = Math.min(min, a[i][j]);
+				max = Math.max(max, a[i][j]);
+			}
+		}
+		
+		double scalingFactor = Math.max(max,-min);
+		
+		for(int i = 0; i < a.length; i++){
+			for(int j = 0; j < a[i].length; j++){
+				a[i][j] /= scalingFactor;
+			}
+		}		
+	}
+	
+	public static void normalize(double[] a){
+		double min = a[0];
+		double max = a[0];
+		for(int i = 1; i < a.length; i++){
+			min = Math.min(min, a[i]);
+			max = Math.max(max, a[i]);
+		}
+		
+		double scalingFactor = Math.max(max,-min);
+		
+		for(int i = 0; i < a.length; i++){
+			a[i] /= scalingFactor;
+		}				
+	}
+	
+	
+	
+	
+	
+	
 }
