@@ -104,23 +104,6 @@ public class Main {
 			DataSet.Item randItem = dataSet.randomItem();
 			double[] sample = rbm.sample(randItem.image,1000);
 			
-			int n = randItem.image.length;
-			System.out.printf("sample %d: ",i);
-			double maxProb = 0;
-			int label = 0;
-			for(int j = 0; j < 10; j++){
-				double p = sample[j+n];
-				System.out.printf("(%d:%.2f) ",j,p);
-				if(p > maxProb){
-					maxProb = p;
-					label = j;
-				}
-			}
-			System.out.println();
-			
-			BufferedImage sampleStart = Util.makeImage(randItem.image, 28);
-			ImageIO.write(sampleStart, "png", new File(String.format("images/start-%d-label%d.png",i,label)));
-
 			BufferedImage sampleImage = Util.makeImage(sample, 28);
 			ImageIO.write(sampleImage, "png", new File(String.format("images/sample%d.png",i)));
 			
