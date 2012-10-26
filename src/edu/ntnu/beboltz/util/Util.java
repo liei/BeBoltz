@@ -144,7 +144,7 @@ public class Util {
 	}
 
 
-	private static void test(double[] xs,String s) {
+	public static void test(double[] xs,String s) {
 		for(int i = 0; i < xs.length; i++){
 	    	assert !Double.isNaN(xs[i]) : String.format("%s:xs[%d] is NaN",s,i);
 	    	assert !Double.isInfinite(xs[i]) : String.format("%s:xs[%d] is NaN",s,i);
