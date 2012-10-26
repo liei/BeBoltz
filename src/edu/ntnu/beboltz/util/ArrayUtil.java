@@ -159,6 +159,22 @@ public class ArrayUtil {
 			a[i] /= scalingFactor;
 		}				
 	}
+
+	public static double average(double[][] a) {
+		double avg = 0;
+		for(int i = 0; i < a.length; i++){
+			avg += average(a[i]);
+		}
+		return avg / a.length;
+	}
+
+	private static double average(double[] a) {
+		double avg = 0;
+		for(int i = 0; i < a.length; i++){
+			avg += a[i];
+		}
+		return avg / a.length;
+	}
 	
 	
 	
