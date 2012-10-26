@@ -8,7 +8,7 @@ import edu.ntnu.beboltz.util.Util;
 
 public class LogisticRegression {
 
-	private static final double DEFAULT_LEARNING_RATE = 0.1;
+	private static final double DEFAULT_LEARNING_RATE = 0.001;
 
 	private final int numInputs;
 	private final int numClasses;
@@ -51,11 +51,9 @@ public class LogisticRegression {
 	private double loss(DataSet ds){
 		double sum = 0;
 		for(DataSet.Item item : ds){
-			double[] input = item.image;
-			int category = item.label;
-			double[] y = Util.softmax(weights, bias, input);
-			sum += Math.log(y[category]);
+			sum += probability(item.image,item.label);
 			assert !Double.isNaN(sum) : "sum is NaN";
+			assert !Double.isInfinite(sum) : "sum is infinite";
 		}
 		return -sum;
 	}
@@ -69,6 +67,7 @@ public class LogisticRegression {
 			double loss = loss(ds);
 			stop = System.currentTimeMillis();
 			System.out.printf("done loss: %.2f (%.2f s)%n",loss,(stop-start)/1000);
+			if(epoch > 10 && loss < 3000000) break;
 		}
 	}
 	
@@ -97,6 +96,9 @@ public class LogisticRegression {
 			}
 			bias[j] -= learningRate * biasGrad[j];
 		}
+
+		System.out.printf("%navg weightsGrad: %g%n",ArrayUtil.average(weightsGrad));
+		System.out.printf("avg weights: %g%n",ArrayUtil.average(weights));
 	}
 	
 	public double indicator(boolean b){
@@ -119,7 +121,7 @@ public class LogisticRegression {
 		start = System.currentTimeMillis();
 		LogisticRegression lr = new LogisticRegression(
 				training.getImageHeight() * training.getImageWidth(),10);
-		lr.train(training, 100);
+		lr.train(training, 200);
 		stop = System.currentTimeMillis();
 		System.out.printf("done (%.2f)%n",(stop-start)/1000);
 		
