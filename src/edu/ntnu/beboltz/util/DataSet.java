@@ -23,30 +23,30 @@ public class DataSet implements Iterable<DataSet.Item>{
 
 	private List<Item> items;
 
-	
+
 	private int imageWidth;
 	private int imageHeight;
-	
+
 	private boolean hasLabels = false;
-	
+
 	private DataSet (List<Item> items,int width, int height, boolean hasLabels){
 		this.items = items;
 		imageWidth = width;
 		imageHeight = height;
 		this.hasLabels = hasLabels;
-	};
-	
+	}
+
 	public static DataSet load(String imageFile) throws IOException{
 		return loadWithLabels(imageFile,null);
 	}
-	
+
 	public static DataSet loadWithLabels(String imageFile, String labelFile) throws IOException{
 		return loadWithLabels(imageFile, labelFile, -1);
 	}
-	
+
 	public static DataSet loadWithLabels(String imageFile, String labelFile, int cases) throws IOException{
 		MnistManager manager = new MnistManager(imageFile,labelFile);
-		
+
 		MnistImageFile images = manager.getImages();
 		MnistLabelFile labels = manager.getLabels();
 		int numItems = cases < 0 ? images.getCount() : cases;
@@ -77,8 +77,8 @@ public class DataSet implements Iterable<DataSet.Item>{
 	public DataSet filter(int... labels){
 		if(!isLabeled())
 			throw new IllegalStateException("Can't filter on DataSet with no labels");
-		
-		
+
+
 		int bits = 0;
 		for(int label : labels){
 			bits |= 1 << label;
@@ -91,87 +91,44 @@ public class DataSet implements Iterable<DataSet.Item>{
 		}
 		return new DataSet(filteredItems,imageWidth,imageHeight,true);
 	}
-	
+
 	public DataSet.Item randomItem() {
 		Random random = new Random();
 		return getItem(random.nextInt(size()));
 	}
-	
+
 	public int getImageWidth(){
 		return imageWidth;
 	}
-	
+
 	public int getImageHeight(){
 		return imageHeight;
 	}
-	
+
 	public int size(){
 		return items.size();
 	}
-	
+
 	public boolean isLabeled(){
 		return hasLabels;
 	}
-	
+
 	public DataSet.Item getItem(int index){
 		return items.get(index);
 	}
-	
+
 	@Override
 	public Iterator<Item> iterator() {
 		return items.iterator();
 	}
-	
+
 	public static class Item {
 		public final double[] image;
 		public final int label;
-		
+
 		private Item(double[] image, int label){
 			this.image = image;
 			this.label = label;
 		}
-		
-		/**
-		 * Assumes the image data has been normalized to fall in the interval [0,1] to be interpreted as
-		 * probabilities. 
-		 * @return A binary vector representing the activation level of each node in the visible layer.
-		 */
-		public DoubleMatrix asInputVector() {
-			DoubleMatrix inputVector = DoubleMatrix.zeros(image.length);
-			int isNeuronActivated;
-			for (int pixel = 0; pixel < image.length; pixel++) {
-				isNeuronActivated = (int)Math.round(image[pixel]);
-				inputVector.put(pixel,isNeuronActivated);
-			}
-			return inputVector;
-		}
 	}
-
-	public static void main(String[] args) throws IOException {
-		System.out.print("loading...");
-		double start = System.currentTimeMillis();
-		DataSet set = DataSet.loadWithLabels(IMAGE_FILE, LABEL_FILE);
-		double stop = System.currentTimeMillis();
-		System.out.printf(" done (%.2f s)%n",(stop-start)/1000);
-
-		Random r = new Random();
-		
-		int[] filter = new int[1 + r.nextInt(5)];
-		for (int i = 0; i < filter.length; i++) {
-			filter[i] = r.nextInt(10);
-		}
-		DataSet filtered = set.filter(filter);
-		System.out.println(filtered.size());
-		System.out.println(Arrays.toString(filter));
-		for(DataSet.Item item : filtered){
-			boolean inFilter = false;
-			for(int i = 0; i < filter.length; i++){
-				inFilter |= item.label == filter[i];
-			}
-			
-			if(!inFilter)
-				System.out.printf("found %d%n",item.label);
-		}
-	}
-
 }
