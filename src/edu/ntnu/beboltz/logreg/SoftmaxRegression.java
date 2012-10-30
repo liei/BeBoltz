@@ -6,7 +6,7 @@ import edu.ntnu.beboltz.util.ArrayUtil;
 import edu.ntnu.beboltz.util.DataSet;
 import edu.ntnu.beboltz.util.Util;
 
-public class LogisticRegression {
+public class SoftmaxRegression {
 
 	private static final double DEFAULT_LEARNING_RATE = 0.13;
 
@@ -18,11 +18,11 @@ public class LogisticRegression {
 	
 	private double learningRate;
 	
-	public LogisticRegression(int numInputs, int numClasses){
+	public SoftmaxRegression(int numInputs, int numClasses){
 		this(numInputs,numClasses,DEFAULT_LEARNING_RATE);
 	}
 	
-	public LogisticRegression(int numInputs, int numClasses, double lr){
+	public SoftmaxRegression(int numInputs, int numClasses, double lr){
 		this.numInputs  = numInputs;
 		this.numClasses = numClasses;
 		
@@ -119,7 +119,7 @@ public class LogisticRegression {
 		System.out.printf("done (%.2f)%n",(stop-start)/1000);
 
 		
-		LogisticRegression lr = new LogisticRegression(
+		SoftmaxRegression lr = new SoftmaxRegression(
 				trainingSet.getImageHeight() * trainingSet.getImageWidth(),10);
 
 		System.out.printf("training...%n");
