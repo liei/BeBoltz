@@ -122,33 +122,18 @@ public class Util {
 	    for(int j = 0; j < w.length; j++){
 			xs[j] = dot(w[j],x) + b[j];
 		}
-	    
-	    
 		double max = max(xs);
-	    
-		
 	    double Z = 0.0;
 	    double[] ps = new double[xs.length];
 	    for (int i = 0; i < xs.length; ++i){
 	    	ps[i] = Math.exp(xs[i] - max); 
 	        Z += ps[i];
 	    }
-	    test(ps,"2");
 
 	    for (int i = 0; i < ps.length; ++i){
 	        ps[i] /= Z;
 	    }
-
-	    test(ps,"3");
 	    return ps;
-	}
-
-
-	public static void test(double[] xs,String s) {
-		for(int i = 0; i < xs.length; i++){
-	    	assert !Double.isNaN(xs[i]) : String.format("%s:xs[%d] is NaN",s,i);
-	    	assert !Double.isInfinite(xs[i]) : String.format("%s:xs[%d] is NaN",s,i);
-	    }
 	}
 
 	private static double max(double... xs) {

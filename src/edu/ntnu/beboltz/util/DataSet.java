@@ -2,12 +2,10 @@ package edu.ntnu.beboltz.util;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
-
-import org.jblas.DoubleMatrix;
 
 import mnist.tools.MnistImageFile;
 import mnist.tools.MnistLabelFile;
@@ -56,7 +54,7 @@ public class DataSet implements Iterable<DataSet.Item>{
 		boolean hasLabels = labels != null;
 		List<Item> items = new ArrayList<Item>(numItems);
 
-        for (; numItems > 0; numItems--) {
+		for(int item = 0; item < numItems; item++){
 			int[][] image = images.readImage();
 			double[] a = new double[width * height];
 			for (int i = 0; i < width; i++) {
@@ -77,7 +75,6 @@ public class DataSet implements Iterable<DataSet.Item>{
 	public DataSet filter(int... labels){
 		if(!isLabeled())
 			throw new IllegalStateException("Can't filter on DataSet with no labels");
-
 
 		int bits = 0;
 		for(int label : labels){
@@ -115,6 +112,20 @@ public class DataSet implements Iterable<DataSet.Item>{
 
 	public DataSet.Item getItem(int index){
 		return items.get(index);
+	}
+
+	public List<DataSet> split(int batchSize){
+
+		List<DataSet> batches = new LinkedList<DataSet>();
+		for(int i = 0; i < items.size(); i+=batchSize){
+			DataSet batch = getSubset(i,i+batchSize);
+			batches.add(batch);
+		}
+		return batches;
+	}
+
+	protected DataSet getSubset(int left, int right) {
+		return new DataSet(items.subList(left, Math.min(right, items.size())), imageWidth, imageHeight, hasLabels);
 	}
 
 	@Override

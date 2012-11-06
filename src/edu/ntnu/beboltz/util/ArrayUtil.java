@@ -42,7 +42,7 @@ public class ArrayUtil {
 	 * @param n  number of columns
 	 * @return  the two dimensional array
 	 */
-	public static double[][] zeroes(int m,int n) {
+	public static double[][] zeros(int m,int n) {
 		double[][] a = new double[m][n];
 		fill(a,0.0);
 		return a;

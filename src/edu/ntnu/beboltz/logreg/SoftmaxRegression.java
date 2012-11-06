@@ -6,9 +6,9 @@ import edu.ntnu.beboltz.util.ArrayUtil;
 import edu.ntnu.beboltz.util.DataSet;
 import edu.ntnu.beboltz.util.Util;
 
-public class LogisticRegression {
+public class SoftmaxRegression {
 
-	private static final double DEFAULT_LEARNING_RATE = 0.001;
+	private static final double DEFAULT_LEARNING_RATE = 0.13;
 
 	private final int numInputs;
 	private final int numClasses;
@@ -18,16 +18,16 @@ public class LogisticRegression {
 	
 	private double learningRate;
 	
-	public LogisticRegression(int numInputs, int numClasses){
+	public SoftmaxRegression(int numInputs, int numClasses){
 		this(numInputs,numClasses,DEFAULT_LEARNING_RATE);
 	}
 	
-	public LogisticRegression(int numInputs, int numClasses, double lr){
-		this.numInputs = numInputs;
+	public SoftmaxRegression(int numInputs, int numClasses, double lr){
+		this.numInputs  = numInputs;
 		this.numClasses = numClasses;
 		
-		weights = ArrayUtil.zeroes(numClasses,numInputs);
-		bias = new double[numClasses];
+		weights = ArrayUtil.zeros(numClasses,numInputs);
+		bias    = ArrayUtil.zeros(numClasses);
 		
 		this.learningRate = lr;
 	}
@@ -48,26 +48,26 @@ public class LogisticRegression {
 		return y[category];
 	}
 	
-	private double loss(DataSet ds){
+	public double loss(DataSet ds){
 		double sum = 0;
 		for(DataSet.Item item : ds){
-			sum += probability(item.image,item.label);
-			assert !Double.isNaN(sum) : "sum is NaN";
-			assert !Double.isInfinite(sum) : "sum is infinite";
+			sum += Math.log(probability(item.image,item.label));
 		}
 		return -sum;
 	}
 	
-	public void train(DataSet ds,int epochs){
+	public void train(DataSet training, DataSet testing, int maxEpochs){
 		double start,stop;
-		for(int epoch = 0; epoch < epochs; epoch++){
+		double errorRate = 1.0;
+		for(int epoch = 0; errorRate > 0.075 && epoch < maxEpochs; epoch++){
 			System.out.printf("\tepoch %d...",epoch);
 			start = System.currentTimeMillis();
-			update(ds);
-			double loss = loss(ds);
+			for(DataSet batch : training.split(100)){
+				update(batch);
+			}
 			stop = System.currentTimeMillis();
-			System.out.printf("done loss: %.2f (%.2f s)%n",loss,(stop-start)/1000);
-			if(epoch > 10 && loss < 3000000) break;
+			errorRate = validate(testing);
+			System.out.printf("done %.2f s  (error: %.2f%%)%n",(stop-start)/1000,errorRate*100);
 		}
 	}
 	
@@ -84,61 +84,49 @@ public class LogisticRegression {
 				}
 				biasGrad[j] -= p;
 			}
-			for(int l = 0; l < numClasses; l++){
-				weightsGrad[j][l] /= ds.size();  
-			}
-			biasGrad[j] /= ds.size();
 		}
 		
 		for(int j = 0; j < numClasses; j++){
 			for(int i = 0; i < numInputs; i++){
-				weights[j][i] -= learningRate * weightsGrad[j][i];
+				weights[j][i] -= learningRate * (weightsGrad[j][i] / ds.size());
 			}
-			bias[j] -= learningRate * biasGrad[j];
+			bias[j] -= learningRate * (biasGrad[j] / ds.size());
 		}
-
-		System.out.printf("%navg weightsGrad: %g%n",ArrayUtil.average(weightsGrad));
-		System.out.printf("avg weights: %g%n",ArrayUtil.average(weights));
 	}
 	
 	public double indicator(boolean b){
 		return b ? 1.0 : 0.0;
 	}
 	
+	private double validate(DataSet validation) {
+		double wrong = 0;
+		for(DataSet.Item item : validation){
+			if(item.label != classify(item.image)){
+				wrong++;
+			}
+		}
+		return wrong / validation.size();
+	}
 	
 	public static void main(String[] args) throws IOException {
 		double start, stop;
 		
 		System.out.printf("loading...");
 		start = System.currentTimeMillis();		
-		DataSet training = DataSet.loadWithLabels(DataSet.IMAGE_FILE,  DataSet.LABEL_FILE);
-		DataSet test 	 = DataSet.loadWithLabels(DataSet.TEST_IMAGES, DataSet.TEST_LABELS);
+		DataSet trainingSet = DataSet.loadWithLabels(DataSet.IMAGE_FILE,  DataSet.LABEL_FILE);
+		DataSet validationSet = DataSet.loadWithLabels(DataSet.TEST_IMAGES, DataSet.TEST_LABELS);
 		stop = System.currentTimeMillis();
 		System.out.printf("done (%.2f)%n",(stop-start)/1000);
 
 		
+		SoftmaxRegression lr = new SoftmaxRegression(
+				trainingSet.getImageHeight() * trainingSet.getImageWidth(),10);
+
 		System.out.printf("training...%n");
 		start = System.currentTimeMillis();
-		LogisticRegression lr = new LogisticRegression(
-				training.getImageHeight() * training.getImageWidth(),10);
-		lr.train(training, 200);
+		lr.train(trainingSet, validationSet, 100);
 		stop = System.currentTimeMillis();
 		System.out.printf("done (%.2f)%n",(stop-start)/1000);
 		
-		System.out.printf("testing...");
-		start = System.currentTimeMillis();	
-		int wrong = 0;
-		for(DataSet.Item item : test){
-			if(item.label != lr.classify(item.image)){
-				wrong++;
-			}
-		}
-		stop = System.currentTimeMillis();
-		System.out.printf("done (%.2f)%n",(stop-start)/1000);
-		System.out.printf("Error rate: %d%%",(wrong * 100)/test.size());
 	}
-	
-	
-	
-	
 }
