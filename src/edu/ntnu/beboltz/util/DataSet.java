@@ -7,51 +7,45 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
+import edu.ntnu.beboltz.mlp.Layer;
+
 import mnist.tools.MnistImageFile;
 import mnist.tools.MnistLabelFile;
 import mnist.tools.MnistManager;
 
-public class DataSet implements Iterable<DataSet.Item>{
+public class DataSet<T> implements Iterable<DataSet.Item<T>>{
 
-	public static final String IMAGE_FILE  = "data/train-images-idx3-ubyte";
-	public static final String LABEL_FILE  = "data/train-labels-idx1-ubyte";
-	public static final String TEST_IMAGES = "data/t10k-images-idx3-ubyte";
-	public static final String TEST_LABELS = "data/t10k-labels-idx1-ubyte";
+	public static final String TRAIN_IMAGES  = "data/train-images-idx3-ubyte";
+	public static final String TRAIN_LABELS  = "data/train-labels-idx1-ubyte";
+	public static final String TEST_IMAGES   = "data/t10k-images-idx3-ubyte";
+	public static final String TEST_LABELS   = "data/t10k-labels-idx1-ubyte";
 	
-	private List<Item> items;
-	
-	private int imageWidth;
-	private int imageHeight;
+	private List<Item<T>> items;
 	
 	private boolean hasLabels = false;
 	
-	private DataSet (List<Item> items,int w, int h,boolean hasLabels){
-		this.items = items;
-		imageWidth = w;
-		imageHeight = h;
+	private DataSet (List<Item<T>> items,boolean hasLabels){
+		this.items = new ArrayList<Item<T>>(items);
 		this.hasLabels = hasLabels;
 	}
 	
-	public static DataSet load(String imagefile) throws IOException{
+	public static DataSet<double[]> load(String imagefile) throws IOException{
 		return loadWithLabels(imagefile,null);
 	}
 	
-	public static DataSet loadWithLabels(String imagefile, String labelfile) throws IOException{
+	public static DataSet<double[]> loadWithLabels(String imagefile, String labelfile) throws IOException{
 		return loadWithLabels(imagefile, labelfile, -1);
 	}
 	
-	public static DataSet loadWithLabels(String imagefile, String labelfile, int cases) throws IOException{
+	public static DataSet<double[]> loadWithLabels(String imagefile, String labelfile, int cases) throws IOException{
 		MnistManager manager = new MnistManager(imagefile,labelfile);
 		
 		MnistImageFile images = manager.getImages();
 		MnistLabelFile labels = manager.getLabels();
 		int numItems = cases < 0 ? images.getCount() : cases;
 
-
-		int w = images.getCols();
-		int h = images.getRows();
 		boolean hasLabels = labels != null;
-		List<Item> items = new ArrayList<Item>(numItems);
+		List<Item<double[]>> items = new LinkedList<Item<double[]>>();
 
 		for(int item = 0; item < numItems; item++){
 			int[][] image = images.readImage();
@@ -66,13 +60,12 @@ public class DataSet implements Iterable<DataSet.Item>{
 			if(hasLabels){
 				label = labels.readLabel();
 			}
-			items.add(new DataSet.Item(a,label));
+			items.add(new Item<double[]>(a,label));
 		}
-		
-		return new DataSet(items,w,h,hasLabels);
+		return new DataSet<double[]>(items,hasLabels);
 	}
 
-	public DataSet filter(int... labels){
+	public DataSet<T> filter(int... labels){
 		if(!isLabeled())
 			throw new IllegalStateException("Can't filter on DataSet with no labels");
 		
@@ -80,26 +73,18 @@ public class DataSet implements Iterable<DataSet.Item>{
 		for(int label : labels){
 			bits |= 1 << label;
 		}
-		List<Item> filteredItems = new ArrayList<Item>();
-		for(DataSet.Item item : items){
+		List<Item<T>> filteredItems = new LinkedList<Item<T>>();
+		for(Item<T> item : items){
 			if((1 << item.label & bits) != 0){
 				filteredItems.add(item);
 			}
 		}
-		return new DataSet(filteredItems,imageWidth,imageHeight,true);
+		return new DataSet<T>(filteredItems,true);
 	}
 	
-	public DataSet.Item randomItem() {
+	public Item<T> randomItem() {
 		Random random = new Random();
 		return getItem(random.nextInt(size()));
-	}
-	
-	public int getImageWidth(){
-		return imageWidth;
-	}
-	
-	public int getImageHeight(){
-		return imageHeight;
 	}
 	
 	public int size(){
@@ -110,35 +95,44 @@ public class DataSet implements Iterable<DataSet.Item>{
 		return hasLabels;
 	}
 	
-	public DataSet.Item getItem(int index){
+	public Item<T> getItem(int index){
 		return items.get(index);
 	}
 	
-	public List<DataSet> split(int batchSize){
-		
-		List<DataSet> batches = new LinkedList<DataSet>();
+	public List<DataSet<T>> split(int batchSize){
+		List<DataSet<T>> batches = new LinkedList<DataSet<T>>();
 		for(int i = 0; i < items.size(); i+=batchSize){
-			DataSet batch = getSubset(i,i+batchSize);
+			DataSet<T> batch = getSubset(i,i+batchSize);
 			batches.add(batch);
 		}
 		return batches;
 	}
 	
-	protected DataSet getSubset(int left, int right) {
-		return new DataSet(items.subList(left, Math.min(right, items.size())), imageWidth, imageHeight, hasLabels);
+	protected DataSet<T> getSubset(int left, int right) {
+		return new DataSet<T>(items.subList(left, Math.min(right, items.size())), hasLabels);
 	}
 
+	public DataSet<T> passThrough(Layer<T> layer) {
+		List<Item<T>> items = new LinkedList<Item<T>>();
+		for(Item<T> item : this.items){
+			T image = layer.activate(item.data);
+			Item<T> newItem = new Item<T>(image, item.label);
+			items.add(newItem);
+		}
+		return new DataSet<T>(items,hasLabels);
+	}
+	
 	@Override
-	public Iterator<Item> iterator() {
+	public Iterator<Item<T>> iterator() {
 		return items.iterator();
 	}
 	
-	public static class Item {
-		public final double[] image;
+	public static class Item<T> {
+		public final T data;
 		public final int label;
 		
-		private Item(double[] image, int label){
-			this.image = image;
+		private Item(T data, int label){
+			this.data = data;
 			this.label = label;
 		}
 	}
