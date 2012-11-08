@@ -9,7 +9,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import edu.ntnu.beboltz.rbm.Rbm;
-import org.jblas.DoubleMatrix;
+import edu.ntnu.beboltz.util.Util;
 
 public class RbmTest {
 	
@@ -34,7 +34,7 @@ public class RbmTest {
 
 	@Test
 	public void testSigmoid() {
-		assertEquals(0.5, rbm.sigmoid(0), 0);
+		assertEquals(0.5, Util.sigmoid(0), 0);
 	}
 	
 //	@Test

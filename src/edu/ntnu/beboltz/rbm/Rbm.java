@@ -1,25 +1,29 @@
 package edu.ntnu.beboltz.rbm;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Random;
 
+import edu.ntnu.beboltz.mlp.Layer;
 import edu.ntnu.beboltz.util.ArrayUtil;
 import edu.ntnu.beboltz.util.DataSet;
+import edu.ntnu.beboltz.util.Util;
 
 
-public class Rbm {
+public class Rbm extends Layer<double[]> implements Serializable{
 	
-	
+	private static final long serialVersionUID = -7682149136104231555L;
+
 	private static final int NUM_LABELS = 10;
 	private int numHiddenUnits;
 	private int numVisibleUnits;
 
-	public double[][] weights; 
-	public double[] hiddenLayerBias;
-	public double[] visibleLayerBias;
+	public final double[][] weights; 
+	public final double[] hiddenUnitsBias;
+	public final double[] visibleUnitsBias;
 	
-
 	private double learningRate;
+	
 	/**
 	 * @param numHiddenUnits  Number of hidden nodes in RBM
 	 * @param numVisibleUnits Number of visible nodes in RBM
@@ -42,42 +46,47 @@ public class Rbm {
 				weights[i][j] = low + (high - low) * random.nextDouble();
 			}
 		}
-		hiddenLayerBias = ArrayUtil.zeros(numHiddenUnits);
-		visibleLayerBias = ArrayUtil.zeros(numVisibleUnits);
-
+		hiddenUnitsBias = ArrayUtil.zeros(numHiddenUnits);
+		visibleUnitsBias = ArrayUtil.zeros(numVisibleUnits);
+	}
+	
+	public Rbm(double[][] weights, double[] hiddenBias, double[] visibleBias) {
+		this.weights = weights;
+		this.hiddenUnitsBias = hiddenBias;
+		this.visibleUnitsBias = visibleBias;
 	}
 	
 	public double[][] getWeights(){
 		return weights;
 	}
 
-	/**
-	 * @param input Sum stimulus to node.
-	 * @return The activation of the given node.
-	 */
-	public double sigmoid (double input) {
-		return 1 / (1 + Math.exp(-input));
+	public double[] getHiddenUnitsBias() {
+		return hiddenUnitsBias;
 	}
-
-
+	
+	public double[] getVisibleUnitsBias() {
+		return visibleUnitsBias;
+	}
+	
 	/**
 	 * Uses contrastive divergence to update the weights of the RBM.
 	 * @param trainingCases dataset containing the training cases to use.
 	 * @param epochs number of times to train on the training cases.
 	 */
-	public void train(DataSet trainingCases, int epochs) {
+	public void train(DataSet<double[]> trainingCases, int epochs) {
 		double start, stop;
 		for (int epoch = 0; epoch < epochs; epoch++) {
 			start = System.currentTimeMillis();
-			for (DataSet.Item trainingCase : trainingCases) {
-				rbmUpdate(trainingCase.image);
+			System.out.printf("epoch %d... ",epoch);
+			for (DataSet.Item<double[]> trainingCase : trainingCases) {
+				rbmUpdate(trainingCase.data);
 			}
 			stop = System.currentTimeMillis();
-			System.out.printf("epoch %d done... (%.2f s)%n",epoch,(stop-start)/1000);
+			System.out.printf("  done (%.2f s)%n",(stop-start)/1000);
 		}
 	}
 	
-	public void trainSupervised(DataSet trainingCases, int epochs) {
+	public void trainSupervised(DataSet<double[]> trainingCases, int epochs) {
 		if(!trainingCases.isLabeled())
 			throw new IllegalArgumentException("The training cases must be labeled");
 
@@ -85,9 +94,9 @@ public class Rbm {
 		for (int epoch = 0; epoch < epochs; epoch++) {
 			System.out.printf("  epoch %d...",epoch);
 			start = System.currentTimeMillis();
-			for (DataSet.Item trainingCase : trainingCases) {
-				double[] input = Arrays.copyOf(trainingCase.image,trainingCase.image.length + NUM_LABELS);
-				input[trainingCase.image.length + trainingCase.label] = 1.0;
+			for (DataSet.Item<double[]> trainingCase : trainingCases) {
+				double[] input = Arrays.copyOf(trainingCase.data,trainingCase.data.length + NUM_LABELS);
+				input[trainingCase.data.length + trainingCase.label] = 1.0;
 				rbmUpdate(input);
 			}
 			stop = System.currentTimeMillis();
@@ -117,7 +126,7 @@ public class Rbm {
 			for(int j = 0; j < numVisibleUnits; j++){
 				sum += weights[i][j] * x1[j];
 			}
-			q1[i] = sigmoid(hiddenLayerBias[i] + sum);
+			q1[i] = Util.sigmoid(hiddenUnitsBias[i] + sum);
 			h1[i] = q1[i] > Math.random() ? 1.0 : 0.0;
 		}
 		
@@ -131,7 +140,7 @@ public class Rbm {
 			for(int i = 0; i < numHiddenUnits; i++){
 				sum += weights[i][j] * h1[i];
 			}
-			p2[j] = sigmoid(visibleLayerBias[j] + sum);
+			p2[j] = Util.sigmoid(visibleUnitsBias[j] + sum);
 			x2[j] = p2[j] > Math.random() ? 1.0 : 0.0;
 		}
 		
@@ -143,7 +152,7 @@ public class Rbm {
 			for(int j = 0; j < numVisibleUnits; j++){
 				sum += weights[i][j] * x2[j];
 			}
-			q2[i] = sigmoid(hiddenLayerBias[i] + sum);
+			q2[i] = Util.sigmoid(hiddenUnitsBias[i] + sum);
 		}
 		
 		// W ← W + e(h1 x′ − Q(h2· = 1|x2 )x′ )
@@ -153,13 +162,25 @@ public class Rbm {
 			}
 		}
 		// b ← b + e(x1 − x2)
-		for(int j = 0; j < visibleLayerBias.length; j++){
-			visibleLayerBias[j] += learningRate * (x1[j] - x2[j]);
+		for(int j = 0; j < visibleUnitsBias.length; j++){
+			visibleUnitsBias[j] += learningRate * (x1[j] - x2[j]);
 		}
 		// c ← c + e(h1 − Q(h2· = 1|x2 ))
-		for(int i = 0; i < hiddenLayerBias.length; i++){
-			hiddenLayerBias[i] += learningRate * (h1[i] - q2[i]);
+		for(int i = 0; i < hiddenUnitsBias.length; i++){
+			hiddenUnitsBias[i] += learningRate * (h1[i] - q2[i]);
 		}
+	}
+	
+	public double[] propup(double[] visible){
+		double[] hidden = new double[numHiddenUnits];
+		for(int i = 0; i < numHiddenUnits; i++){
+			double sum = 0;
+			for(int j = 0; j < numVisibleUnits; j++){
+				sum += weights[i][j] * visible[j];
+			}
+			hidden[i] = Util.sigmoid(hiddenUnitsBias[i] + sum) > Math.random() ? 1.0 : 0.0;
+		}
+		return hidden;
 	}
 	
 	public double[] sample(double[] startSample, int sampleSteps){
@@ -174,7 +195,7 @@ public class Rbm {
 				for(int j = 0; j < numVisibleUnits; j++){
 					sum += weights[i][j] * visible[j];
 				}
-				hidden[i] = sigmoid(hiddenLayerBias[i] + sum) > Math.random() ? 1.0 : 0.0;
+				hidden[i] = Util.sigmoid(hiddenUnitsBias[i] + sum) > Math.random() ? 1.0 : 0.0;
 			}
 			
 			for(int j = 0; j < numVisibleUnits; j++){
@@ -182,9 +203,46 @@ public class Rbm {
 				for(int i = 0; i < numHiddenUnits; i++){
 					sum += weights[i][j] * hidden[i];
 				}
-				visible[j] = sigmoid(visibleLayerBias[j] + sum);
+				visible[j] = Util.sigmoid(visibleUnitsBias[j] + sum);
 			}
 		}
 		return visible;
+	}
+
+	@Override
+	protected double[] activate() {
+		double[] visible = input;
+		double[] q = new double[numHiddenUnits];
+		for(int i = 0; i < numHiddenUnits; i++){
+			double sum = 0;
+			for(int j = 0; j < numVisibleUnits; j++){
+				sum += weights[i][j] * visible[j];
+			}
+			q[i] = Util.sigmoid(hiddenUnitsBias[i] + sum);
+		}
+		return q;
+	}
+	
+	@Override
+	public boolean equals(Object o){
+		if(o == null || !(o instanceof Rbm)){
+			return false;
+		}
+		
+		Rbm that = (Rbm) o;
+
+		return isSameSize(this,that) &&
+				hasSameBiases(this,that) &&
+				ArrayUtil.equals(this.weights,that.weights);
+	}
+	
+	private boolean isSameSize(Rbm rbm1, Rbm rbm2){
+		return rbm1.numHiddenUnits == rbm2.numHiddenUnits &&
+				rbm1.numVisibleUnits == rbm2.numVisibleUnits;
+	}
+
+	private boolean hasSameBiases(Rbm rbm1, Rbm rbm2){
+		return Arrays.equals(rbm1.hiddenUnitsBias, rbm2.hiddenUnitsBias) &&
+				Arrays.equals(rbm1.visibleUnitsBias, rbm2.visibleUnitsBias);
 	}
 }
