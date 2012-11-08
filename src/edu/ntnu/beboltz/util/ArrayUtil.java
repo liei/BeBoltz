@@ -176,7 +176,17 @@ public class ArrayUtil {
 		return avg / a.length;
 	}
 	
-	
+	public static boolean equals(double[][] w1, double[][] w2) {
+		if(w1.length != w2.length)
+			return false;
+		
+		for(int i = 0; i < w1.length ; i++){
+			if(!Arrays.equals(w1[i], w2[i])){
+				return false;
+			}
+		}
+		return true;
+	}
 	
 	
 	
