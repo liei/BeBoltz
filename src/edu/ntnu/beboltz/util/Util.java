@@ -152,4 +152,24 @@ public class Util {
 		}
 		return sum;
 	}
+
+
+	public static double[][] getWeightsFromImage(BufferedImage im) {
+		double[][] weights = new double[im.getHeight()][im.getWidth()];
+		for(int i = 0; i < weights.length; i++){
+			for(int j = 0; i < weights[i].length; j++){
+				weights[i][j] = im.getRGB(j, i) & 0x00FF;
+			}
+		}
+		return weights;
+	}
+
+
+	public static double[] getBiasFromImage(BufferedImage im) {
+		double[] bias = new double[im.getWidth()];
+		for(int i = 0; i < bias.length; i++){
+			bias[i] = im.getRGB(0,i) & 0x00FF;
+		}
+		return bias;
+	}
 }

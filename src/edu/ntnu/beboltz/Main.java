@@ -20,10 +20,10 @@ public class Main {
 		System.out.print("loading...");
 		double start = System.currentTimeMillis();
 
-		DataSet trainSet = null;
-		DataSet testSet = null; 
+		DataSet<double[]> trainSet = null;
+		DataSet<double[]> testSet = null; 
 		try {
-			trainSet = DataSet.loadWithLabels(DataSet.IMAGE_FILE, DataSet.LABEL_FILE);
+			trainSet = DataSet.loadWithLabels(DataSet.TRAIN_IMAGES, DataSet.TRAIN_LABELS);
 			testSet = DataSet.loadWithLabels(DataSet.TEST_IMAGES, DataSet.TEST_LABELS);
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -32,8 +32,7 @@ public class Main {
 		System.out.printf(" done (%.2f s)%n",(stop-start)/1000);
 		
 		start = System.currentTimeMillis();
-		int imageDimensions = trainSet.getImageHeight() * trainSet.getImageWidth();
-		Rbm rbm = new Rbm(NUM_HIDDEN_UNITS, imageDimensions + 10, LEARNING_RATE);
+		Rbm rbm = new Rbm(NUM_HIDDEN_UNITS, trainSet.getItem(0).data.length + 10, LEARNING_RATE);
 		
 		
 		System.out.println("training...");
@@ -53,11 +52,11 @@ public class Main {
 		ImageIO.write(filterImage, "png",new File("images/filters.png"));
 	}
 
-	private static void testClassification(DataSet testSet, Rbm rbm){
+	private static void testClassification(DataSet<double[]> testSet, Rbm rbm){
 		double[] ps = new double[10];
 		int wrong = 0;
 		int i = 0;
-		for(DataSet.Item item : testSet){
+		for(DataSet.Item<double[]> item : testSet){
 			int label = classify(item,rbm,ps);
 			if(label != item.label){
 				System.out.printf("wrong%d  item.label:%d, label:%d, [",i,item.label,label);
@@ -66,7 +65,7 @@ public class Main {
 				}
 				System.out.println("]");
 				wrong++;
-				BufferedImage image = Util.makeImage(item.image, 28);
+				BufferedImage image = Util.makeImage(item.data, 28);
 				try {
 					ImageIO.write(image, "png", new File(String.format("images/wrong%d-guess%d.png", i, label)));
 				} catch (IOException e) {
@@ -78,10 +77,10 @@ public class Main {
 		System.out.printf("Error rate: %.2f%n",((double)wrong/testSet.size()));
 	}
 	
-	private static int classify(DataSet.Item item, Rbm rbm, double[] ps){
-		double[] sample = rbm.sample(item.image,1000);
+	private static int classify(DataSet.Item<double[]> item, Rbm rbm, double[] ps){
+		double[] sample = rbm.sample(item.data,1000);
 		
-		int n = item.image.length;
+		int n = item.data.length;
 		double maxProb = 0;
 		int label = 0;
 		for(int i = 0; i < 10; i++){
@@ -96,13 +95,13 @@ public class Main {
 		return label;
 	}
 	
-	private static void sample(DataSet dataSet, Rbm rbm, int samples) throws IOException {
+	private static void sample(DataSet<double[]> dataSet, Rbm rbm, int samples) throws IOException {
 		for(int i = 0; i < samples; i++){
 			System.out.print("Sampling...");
 			double start = System.currentTimeMillis();
 			
-			DataSet.Item randItem = dataSet.randomItem();
-			double[] sample = rbm.sample(randItem.image,1000);
+			DataSet.Item<double[]> randItem = dataSet.randomItem();
+			double[] sample = rbm.sample(randItem.data,1000);
 			
 			BufferedImage sampleImage = Util.makeImage(sample, 28);
 			ImageIO.write(sampleImage, "png", new File(String.format("images/sample%d.png",i)));
