@@ -3,4 +3,10 @@
 # Package Files #
 *.war
 *.ear
+*.log
+*.pdf
+*.toc
+*.aux
+*.bbl
+*.blg
 /images

@@ -7,8 +7,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
-import edu.ntnu.beboltz.mlp.Layer;
-
 import mnist.tools.MnistImageFile;
 import mnist.tools.MnistLabelFile;
 import mnist.tools.MnistManager;
@@ -55,7 +53,7 @@ public class DataSet<T> implements Iterable<DataSet.Item<T>>{
 					a[i*image.length + j] = image[i][j] / 255.0;
 				}
 			}
-			
+
 			int label = -1;
 			if(hasLabels){
 				label = labels.readLabel();
@@ -68,7 +66,7 @@ public class DataSet<T> implements Iterable<DataSet.Item<T>>{
 	public DataSet<T> filter(int... labels){
 		if(!isLabeled())
 			throw new IllegalStateException("Can't filter on DataSet with no labels");
-		
+
 		int bits = 0;
 		for(int label : labels){
 			bits |= 1 << label;
@@ -86,11 +84,11 @@ public class DataSet<T> implements Iterable<DataSet.Item<T>>{
 		Random random = new Random();
 		return getItem(random.nextInt(size()));
 	}
-	
+
 	public int size(){
 		return items.size();
 	}
-	
+
 	public boolean isLabeled(){
 		return hasLabels;
 	}
@@ -110,7 +108,6 @@ public class DataSet<T> implements Iterable<DataSet.Item<T>>{
 	
 	public DataSet<T> getSubset(int left, int right) {
 		return new DataSet<T>(items.subList(left, Math.min(right, items.size())), hasLabels);
-	}
 
 	public DataSet<T> passThrough(Layer<T> layer) {
 		List<Item<T>> items = new LinkedList<Item<T>>();
