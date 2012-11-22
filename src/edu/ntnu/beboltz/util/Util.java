@@ -72,10 +72,10 @@ public class Util {
 	}
 	
 	public static BufferedImage makeFilterImage(double[][] w, 
-			int m, int n, int filterWidth, int filterHeight) {
+			int m, int n,int numLabels, int filterWidth, int filterHeight) {
 		List<BufferedImage> filters = new LinkedList<BufferedImage>();
 		for(int i = 0; i < w.length; i++){
-			double[] filterArray = Util.scale(Arrays.copyOf(w[i],w[i].length));
+			double[] filterArray = Util.scale(Arrays.copyOf(w[i],w[i].length-numLabels));
 			BufferedImage filter = Util.makeImage(filterArray,filterWidth);
 			filters.add(filter);
 		}
@@ -136,10 +136,18 @@ public class Util {
 	    return ps;
 	}
 
-	private static double max(double... xs) {
-		double max = xs[0];
-	    for (int i = 1; i < xs.length; ++i){
-	    	max = Math.max(max, xs[i]);
+	private static double max(double... a) {
+		double max = a[0];
+	    for (int i = 1; i < a.length; i++){
+	    	max = Math.max(max, a[i]);
+	    }
+		return max;
+	}
+	
+	private static double max(double[] a, int left, int right) {
+		double max = a[left];
+	    for (int i = left + 1; i < right; i++){
+	    	max = Math.max(max, a[i]);
 	    }
 		return max;
 	}
@@ -152,24 +160,35 @@ public class Util {
 		}
 		return sum;
 	}
+	
+	/**
+	 * return 1 with probability p, else 0
+	 * @param p  probability
+	 * @return 1 or 0
+	 */
+	public static double sampleBinary(double p){
+		return p > Math.random() ? 1.0 : 0.0;
+	}
 
-
-	public static double[][] getWeightsFromImage(BufferedImage im) {
-		double[][] weights = new double[im.getHeight()][im.getWidth()];
-		for(int i = 0; i < weights.length; i++){
-			for(int j = 0; i < weights[i].length; j++){
-				weights[i][j] = im.getRGB(j, i) & 0x00FF;
-			}
+	public static double[] sampleBinary(double[] ps) {
+		double[] samples = new double[ps.length];
+		for(int i = 0; i < samples.length; i++){
+			samples[i] = sampleBinary(ps[i]);
 		}
-		return weights;
+		return samples;
+	}
+	
+	public static void softmax(double[] a, int left, int right) {
+		double max = max(a,left,right);
+	    double Z = 0.0;
+	    for(int i = left; i < right; i++){
+	    	a[i] = Math.exp(a[i] - max); 
+	        Z += a[i];
+	    }
+	    for(int i = left; i < right; i++){
+	        a[i] /= Z;
+	    }
 	}
 
 
-	public static double[] getBiasFromImage(BufferedImage im) {
-		double[] bias = new double[im.getWidth()];
-		for(int i = 0; i < bias.length; i++){
-			bias[i] = im.getRGB(0,i) & 0x00FF;
-		}
-		return bias;
-	}
 }

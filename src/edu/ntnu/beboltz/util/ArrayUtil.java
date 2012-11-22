@@ -187,8 +187,22 @@ public class ArrayUtil {
 		}
 		return true;
 	}
+
 	
-	
-	
+	/**
+	 * Gives a matrix of size size(v) x size(u) with elements v_i * u_j
+	 * @param u  a vector
+	 * @param v  a vector
+	 * @return a matrix
+	 */
+	public static double[][] outer(double[] v, double[] u) {
+		double[][] m = new double[v.length][u.length];
+		for(int i = 0; i < v.length; i++){
+			for(int j = 0; j < u.length; j++){
+				m[i][j] = v[i] * v[j];
+			}
+		}
+		return m;
+	}
 	
 }

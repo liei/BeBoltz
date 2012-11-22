@@ -108,7 +108,7 @@ public class DataSet<T> implements Iterable<DataSet.Item<T>>{
 		return batches;
 	}
 	
-	protected DataSet<T> getSubset(int left, int right) {
+	public DataSet<T> getSubset(int left, int right) {
 		return new DataSet<T>(items.subList(left, Math.min(right, items.size())), hasLabels);
 	}
 
