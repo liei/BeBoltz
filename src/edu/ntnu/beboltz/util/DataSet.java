@@ -7,6 +7,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
+import edu.ntnu.beboltz.mlp.Layer;
+
 import mnist.tools.MnistImageFile;
 import mnist.tools.MnistLabelFile;
 import mnist.tools.MnistManager;
@@ -108,6 +110,7 @@ public class DataSet<T> implements Iterable<DataSet.Item<T>>{
 	
 	public DataSet<T> getSubset(int left, int right) {
 		return new DataSet<T>(items.subList(left, Math.min(right, items.size())), hasLabels);
+	}
 
 	public DataSet<T> passThrough(Layer<T> layer) {
 		List<Item<T>> items = new LinkedList<Item<T>>();
