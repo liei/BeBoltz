@@ -176,9 +176,33 @@ public class ArrayUtil {
 		return avg / a.length;
 	}
 	
+	public static boolean equals(double[][] w1, double[][] w2) {
+		if(w1.length != w2.length)
+			return false;
+		
+		for(int i = 0; i < w1.length ; i++){
+			if(!Arrays.equals(w1[i], w2[i])){
+				return false;
+			}
+		}
+		return true;
+	}
+
 	
-	
-	
-	
+	/**
+	 * Gives a matrix of size size(v) x size(u) with elements v_i * u_j
+	 * @param u  a vector
+	 * @param v  a vector
+	 * @return a matrix
+	 */
+	public static double[][] outer(double[] v, double[] u) {
+		double[][] m = new double[v.length][u.length];
+		for(int i = 0; i < v.length; i++){
+			for(int j = 0; j < u.length; j++){
+				m[i][j] = v[i] * v[j];
+			}
+		}
+		return m;
+	}
 	
 }

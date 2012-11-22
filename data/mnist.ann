@@ -1,0 +1,9 @@
+ann mnist-classifier 0.3 bias
+
+layer input input 784 identity
+
+layer hidden hidden 250 logistic
+layer output output 10 logistic
+
+link input hidden full 0.0 ClassicHebbian 0.1 -0.3 0.3
+link hidden output full 0.0 ClassicHebbian 0.1 -0.3 0.3
