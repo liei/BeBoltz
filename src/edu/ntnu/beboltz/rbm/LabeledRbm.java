@@ -10,8 +10,8 @@ import edu.ntnu.beboltz.util.Util;
 
 
 public class LabeledRbm extends Layer<double[]> implements Serializable{
-	
-	private static final long serialVersionUID = -7682149136104231555L;
+
+	private static final long serialVersionUID = -7834301860504501992L;
 
 	private int numHiddenUnits;
 	private int numVisibleUnits;
@@ -40,12 +40,12 @@ public class LabeledRbm extends Layer<double[]> implements Serializable{
 		this.numLabelUnits = numLabelUnits;
 		this.learningRate = learningRate;
 		
-		double endpoint = 4 * Math.sqrt(6.0 / (numHiddenUnits + numVisibleUnits));
+		double endpoint = 4 * Math.sqrt(6.0 / (numHiddenUnits + numVisibleUnits + numLabelUnits));
+
 		weights = ArrayUtil.rand(numHiddenUnits, numVisibleUnits, -endpoint, endpoint);
 		visibleUnitsBias = ArrayUtil.zeros(numVisibleUnits);
 
-		double labelEndpoint = 4 * Math.sqrt(6.0 / numHiddenUnits + numLabelUnits);
-		labelWeights = ArrayUtil.rand(numHiddenUnits, numLabelUnits, -labelEndpoint, labelEndpoint);
+		labelWeights = ArrayUtil.rand(numHiddenUnits, numLabelUnits, -endpoint, endpoint);
 		labelUnitsBias = ArrayUtil.rand(numLabelUnits);
 
 		hiddenUnitsBias  = ArrayUtil.zeros(numHiddenUnits);
@@ -133,25 +133,25 @@ public class LabeledRbm extends Layer<double[]> implements Serializable{
 				sum += labelWeights[i][j] * h1[i];
 			}
 			lblp2[j] = sum + labelUnitsBias[j];
-			lblp2[j] = Util.sigmoid(lblp2[j]);
+//			lblp2[j] = Util.sigmoid(lblp2[j]);
 		}
 		
 		// run softmax on the label units
-//		Util.softmax(lblp2,0,numLabelUnits);
-		// sample from the label units, set one unit, i, 
-		// to 1.0 with probability p2[i], set the rest to 0.0.
-//		double cumulativeProb = 0.0;
-//		double sample = Math.random();
-//		boolean done = false;
-//		for(int i = 0; i < numLabelUnits; i++){
-//			cumulativeProb += lblp2[i];
-//			if(!done && cumulativeProb > sample){
-//				lbl2[i] = 1.0;
-//				done = true;
-//			} else {
-//				lbl2[i] = 0.0;
-//			}
-//		}
+		Util.softmax(lblp2,0,numLabelUnits);
+//		 sample from the label units, set one unit, i, 
+//		 to 1.0 with probability p2[i], set the rest to 0.0.
+		double cumulativeProb = 0.0;
+		double sample = Math.random();
+		boolean done = false;
+		for(int i = 0; i < numLabelUnits; i++){
+			cumulativeProb += lblp2[i];
+			if(!done && cumulativeProb > sample){
+				lbl2[i] = 1.0;
+				done = true;
+			} else {
+				lbl2[i] = 0.0;
+			}
+		}
 		
 //		for all hidden units i do
 //			compute Q(h2i = 1|x2 ) (for binomial units, sigm(ci + sum(Wijx2j)
@@ -186,7 +186,7 @@ public class LabeledRbm extends Layer<double[]> implements Serializable{
 		}
 		
 		for(int j = 0; j < labelUnitsBias.length; j++){
-			labelUnitsBias[j] += learningRate * (lbl1[j] - lblp2[j]);
+			labelUnitsBias[j] += learningRate * (lbl1[j] - lbl2[j]);
 		}
 		
 		
@@ -230,18 +230,21 @@ public class LabeledRbm extends Layer<double[]> implements Serializable{
 				}
 				labels[j] = visibleUnitsBias[j] + sum;
 			}
-//			Util.softmax(labels,0,numLabelUnits);
+			Util.softmax(labels,0,numLabelUnits);
+			double cumulativeProb = 0.0;
+			double sample = Math.random();
+			boolean done = false;
+			for(int i = 0; i < numLabelUnits; i++){
+				cumulativeProb += labels[i];
+				if(!done && cumulativeProb > sample){
+					labels[i] = 1.0;
+					done = true;
+				} else {
+					labels[i] = 0.0;
+				}
+			}
 		}
 		return labels;
-		
-//		double[] q       = new double[numHiddenUnits];
-//		double[] hidden  = new double[numHiddenUnits];
-//		double[] p       = new double[numVisibleUnits];
-//		double[] visible = new double[numVisibleUnits];
-//		
-//		System.arraycopy(startSample, 0, visible, 0, startSample.length);
-//		gibbsVisibleHiddenVisible(sampleSteps, q, hidden, p, visible);
-//		return p;
 	}
 
 	private void gibbsVisibleHiddenVisible(int n, double[] q,double[] hidden,
@@ -317,5 +320,13 @@ public class LabeledRbm extends Layer<double[]> implements Serializable{
 	private boolean hasSameBiases(LabeledRbm rbm1, LabeledRbm rbm2){
 		return Arrays.equals(rbm1.hiddenUnitsBias, rbm2.hiddenUnitsBias) &&
 				Arrays.equals(rbm1.visibleUnitsBias, rbm2.visibleUnitsBias);
+	}
+
+	public double[][] getLabelWeights() {
+		return labelWeights;
+	}
+
+	public double[] getLabelUnitsBias() {
+		return labelUnitsBias;
 	}
 }
