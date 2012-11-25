@@ -421,7 +421,7 @@ public class Dbn {
 				upDown(trainingCase.data,labels,10,0.1);
 			}
 			stop = System.currentTimeMillis();
-			System.out.printf("done (%.2f)",(stop-start)/1000);
+			System.out.printf("done (%.2f)%n",(stop-start)/1000);
 		}
 	}
 }
