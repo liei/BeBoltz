@@ -190,5 +190,17 @@ public class Util {
 	    }
 	}
 
+	public static int setFlags(int... flags) {
+		int bits = 0;
+		for(int label : flags){
+			bits |= 1 << label;
+		}
+		return bits;
+	}
+
+	public static boolean isFlagSet(int bits, int flag) {
+		return (1 << flag & bits) != 0;
+	}
+
 
 }
