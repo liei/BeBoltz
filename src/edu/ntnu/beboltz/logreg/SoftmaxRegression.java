@@ -2,9 +2,10 @@ package edu.ntnu.beboltz.logreg;
 
 import java.io.IOException;
 
+import edu.ntnu.beboltz.dataset.Dataset;
+import edu.ntnu.beboltz.dataset.Mnist;
 import edu.ntnu.beboltz.mlp.Layer;
 import edu.ntnu.beboltz.util.ArrayUtil;
-import edu.ntnu.beboltz.util.DataSet;
 import edu.ntnu.beboltz.util.Util;
 
 public class SoftmaxRegression extends Layer<double[]>{
@@ -49,21 +50,21 @@ public class SoftmaxRegression extends Layer<double[]>{
 		return y[category];
 	}
 	
-	public double loss(DataSet<double[]> ds){
+	public double loss(Dataset<double[]> ds){
 		double sum = 0;
-		for(DataSet.Item<double[]> item : ds){
+		for(Dataset.Item<double[]> item : ds){
 			sum += Math.log(probability(item.data,item.label));
 		}
 		return -sum;
 	}
 	
-	public void train(DataSet<double[]> trainingSet, DataSet<double[]> validationSet,double minError, int maxEpochs){
+	public void train(Dataset<double[]> trainingSet, Dataset<double[]> validationSet,double minError, int maxEpochs){
 		double start,stop;
 		double error = 1.0;
 		for(int epoch = 0; error > minError && epoch < maxEpochs; epoch++){
 			System.out.printf("\tepoch %d...",epoch);
 			start = System.currentTimeMillis();
-			for(DataSet<double[]> batch : trainingSet.split(100)){
+			for(Dataset<double[]> batch : trainingSet.split(100)){
 				update(batch);
 			}
 			stop = System.currentTimeMillis();
@@ -72,7 +73,7 @@ public class SoftmaxRegression extends Layer<double[]>{
 		}
 	}
 
-	public void train(DataSet<double[]> trainingSet, DataSet<double[]> validationSet,int maxEpochs){
+	public void train(Dataset<double[]> trainingSet, Dataset<double[]> validationSet,int maxEpochs){
 		int batchSize = 100;
 		int numBatches = trainingSet.size() / batchSize;
 		
@@ -94,7 +95,7 @@ public class SoftmaxRegression extends Layer<double[]>{
 			int batchIndex = 0;
 			System.out.printf("\tepoch %d...",epoch);
 			double start = System.currentTimeMillis();
-			for(DataSet<double[]> batch : trainingSet.split(batchSize)){
+			for(Dataset<double[]> batch : trainingSet.split(batchSize)){
 				update(batch);
 				// iteration number
 				int iter = epoch * numBatches + batchIndex;
@@ -129,12 +130,12 @@ public class SoftmaxRegression extends Layer<double[]>{
 		}
 	}
 	
-	public void update(DataSet<double[]> ds){
+	public void update(Dataset<double[]> ds){
 		
 		double[][] weightsGrad = new double[weights.length][weights[0].length];
 		double[]   biasGrad   = new double[bias.length];
 		for(int j = 0; j < numClasses; j++){
-			for(DataSet.Item<double[]> item : ds){
+			for(Dataset.Item<double[]> item : ds){
 				setInput(item.data);
 				double[] x_i = input;
 				double p = indicator(j == item.label) - probability(x_i,j);
@@ -157,9 +158,9 @@ public class SoftmaxRegression extends Layer<double[]>{
 		return b ? 1.0 : 0.0;
 	}
 	
-	private double validate(DataSet<double[]> validation) {
+	private double validate(Dataset<double[]> validation) {
 		double wrong = 0;
-		for(DataSet.Item<double[]> item : validation){
+		for(Dataset.Item<double[]> item : validation){
 			if(item.label != classify(item.data)){
 				wrong++;
 			}
@@ -177,8 +178,8 @@ public class SoftmaxRegression extends Layer<double[]>{
 		
 		System.out.printf("loading...");
 		start = System.currentTimeMillis();		
-		DataSet<double[]> trainingSet = DataSet.loadWithLabels(DataSet.TRAIN_IMAGES,  DataSet.TRAIN_LABELS);
-		DataSet<double[]> validationSet = DataSet.loadWithLabels(DataSet.TEST_IMAGES, DataSet.TEST_LABELS);
+		Dataset<double[]> trainingSet = Mnist.loadWithLabels(Dataset.TRAIN_IMAGES,  Dataset.TRAIN_LABELS);
+		Dataset<double[]> validationSet = Mnist.loadWithLabels(Dataset.TEST_IMAGES, Dataset.TEST_LABELS);
 		stop = System.currentTimeMillis();
 		System.out.printf("done (%.2f)%n",(stop-start)/1000);
 

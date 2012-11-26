@@ -4,9 +4,9 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Random;
 
+import edu.ntnu.beboltz.dataset.Dataset;
 import edu.ntnu.beboltz.mlp.Layer;
 import edu.ntnu.beboltz.util.ArrayUtil;
-import edu.ntnu.beboltz.util.DataSet;
 import edu.ntnu.beboltz.util.Util;
 
 
@@ -75,12 +75,12 @@ public class Rbm extends Layer<double[]> implements Serializable{
 	 * @param trainingCases dataset containing the training cases to use.
 	 * @param epochs number of times to train on the training cases.
 	 */
-	public void train(DataSet<double[]> trainingCases, int epochs) {
+	public void train(Dataset<double[]> trainingCases, int epochs) {
 		double start, stop;
 		for (int epoch = 0; epoch < epochs; epoch++) {
 			start = System.currentTimeMillis();
 			System.out.printf("epoch %d... ",epoch);
-			for (DataSet.Item<double[]> trainingCase : trainingCases) {
+			for (Dataset.Item<double[]> trainingCase : trainingCases) {
 				rbmUpdate(trainingCase.data);
 			}
 			stop = System.currentTimeMillis();
@@ -88,7 +88,7 @@ public class Rbm extends Layer<double[]> implements Serializable{
 		}
 	}
 	
-	public void trainSupervised(DataSet<double[]> trainingCases, int epochs) {
+	public void trainSupervised(Dataset<double[]> trainingCases, int epochs) {
 		if(!trainingCases.isLabeled())
 			throw new IllegalArgumentException("The training cases must be labeled");
 
@@ -97,7 +97,7 @@ public class Rbm extends Layer<double[]> implements Serializable{
 			System.out.printf("  epoch %d...",epoch);
 			start = System.currentTimeMillis();
 			double cost = 0.0;
-			for (DataSet.Item<double[]> trainingCase : trainingCases) {
+			for (Dataset.Item<double[]> trainingCase : trainingCases) {
 				double[] input = Arrays.copyOf(trainingCase.data,trainingCase.data.length + NUM_LABELS);
 				input[trainingCase.data.length + trainingCase.label] = 1.0;
 				double[] nVisible = rbmUpdate(input);
@@ -110,7 +110,7 @@ public class Rbm extends Layer<double[]> implements Serializable{
 		}
 	}
 	
-	public void trainLabeled(DataSet<double[]> trainingCases, int epochs) {
+	public void trainLabeled(Dataset<double[]> trainingCases, int epochs) {
 		if(!trainingCases.isLabeled())
 			throw new IllegalArgumentException("The training cases must be labeled");
 
@@ -118,7 +118,7 @@ public class Rbm extends Layer<double[]> implements Serializable{
 		for (int epoch = 0; epoch < epochs; epoch++) {
 			System.out.printf("  epoch %d...",epoch);
 			start = System.currentTimeMillis();
-			for (DataSet.Item<double[]> trainingCase : trainingCases) {
+			for (Dataset.Item<double[]> trainingCase : trainingCases) {
 				double[] input = Arrays.copyOf(trainingCase.data,trainingCase.data.length + NUM_LABELS);
 				input[trainingCase.data.length + trainingCase.label] = 1.0;
 				rbmUpdate(input);

@@ -9,10 +9,11 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
+import edu.ntnu.beboltz.dataset.Dataset;
+import edu.ntnu.beboltz.dataset.Mnist;
 import edu.ntnu.beboltz.logreg.SoftmaxRegression;
 import edu.ntnu.beboltz.rbm.Rbm;
 import edu.ntnu.beboltz.util.ArrayUtil;
-import edu.ntnu.beboltz.util.DataSet;
 import edu.ntnu.beboltz.util.Util;
 import edu.ntnu.encephatron.ANN;
 import edu.ntnu.encephatron.ANNBuilder;
@@ -34,20 +35,20 @@ public class Testing {
 		
 		System.out.print("loading...");
 		double start = System.currentTimeMillis();
-		DataSet<double[]> trainingSet = DataSet.loadWithLabels(DataSet.TRAIN_IMAGES,DataSet.TRAIN_LABELS);
-		DataSet<double[]> testSet = DataSet.loadWithLabels(DataSet.TEST_IMAGES,DataSet.TEST_LABELS);
+		Dataset<double[]> trainingSet = Mnist.loadWithLabels(Dataset.TRAIN_IMAGES,Dataset.TRAIN_LABELS);
+		Dataset<double[]> testSet = Mnist.loadWithLabels(Dataset.TEST_IMAGES,Dataset.TEST_LABELS);
 		
 		List<TrainingCase> cases = new LinkedList<TrainingCase>();
 		List<TrainingCase> validationCases = new LinkedList<TrainingCase>();
 		
 		
-		for(DataSet.Item<double[]> c : trainingSet.getSubset(0, trainingSet.size()-10000)){
+		for(Dataset.Item<double[]> c : trainingSet.getSubset(0, trainingSet.size()-10000)){
 			double[] output = new double[10];
 			output[c.label] = 1.0;
 			cases.add(TrainingCase.input(c.data).output(output));
 		}
 		
-		for(DataSet.Item<double[]> c : trainingSet.getSubset(10000, trainingSet.size())){
+		for(Dataset.Item<double[]> c : trainingSet.getSubset(10000, trainingSet.size())){
 			double[] output = new double[10];
 			output[c.label] = 1.0;
 			validationCases.add(TrainingCase.input(c.data).output(output));
@@ -66,7 +67,7 @@ public class Testing {
 		System.out.println("testing... ");
 		start = System.currentTimeMillis();
 		double wrong = 0;
-		for(DataSet.Item<double[]> c : testSet){
+		for(Dataset.Item<double[]> c : testSet){
 			int label = indexOfHighest(ann.run(c.data));
 			if(label != c.label){
 				wrong++;
@@ -134,11 +135,11 @@ public class Testing {
 			FileNotFoundException, ClassNotFoundException {
 		System.out.print("loading...");
 		double start = System.currentTimeMillis();
-		DataSet trainingSet = null;
-		DataSet validationSet  = null; 
+		Dataset trainingSet = null;
+		Dataset validationSet  = null; 
 		try {
-			trainingSet   = DataSet.loadWithLabels(DataSet.TRAIN_IMAGES,  DataSet.TRAIN_LABELS);
-			validationSet = DataSet.loadWithLabels(DataSet.TEST_IMAGES, DataSet.TEST_LABELS);
+			trainingSet   = Mnist.loadWithLabels(Dataset.TRAIN_IMAGES,  Dataset.TRAIN_LABELS);
+			validationSet = Mnist.loadWithLabels(Dataset.TEST_IMAGES, Dataset.TEST_LABELS);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -160,8 +161,8 @@ public class Testing {
 		Rbm rbm = (Rbm)ois.readObject();
 		
 		
-		DataSet trainingSet2 = trainingSet.passThrough(rbm);
-		DataSet validationSet2 = validationSet.passThrough(rbm);
+		Dataset trainingSet2 = trainingSet.passThrough(rbm);
+		Dataset validationSet2 = validationSet.passThrough(rbm);
 		
 		System.out.println("training softmax regression...");
 		start = System.currentTimeMillis();
