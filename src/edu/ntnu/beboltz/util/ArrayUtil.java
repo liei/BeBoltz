@@ -1,5 +1,6 @@
 package edu.ntnu.beboltz.util;
 
+import java.lang.reflect.Array;
 import java.util.Arrays;
 
 public class ArrayUtil {
@@ -199,10 +200,36 @@ public class ArrayUtil {
 		double[][] m = new double[v.length][u.length];
 		for(int i = 0; i < v.length; i++){
 			for(int j = 0; j < u.length; j++){
-				m[i][j] = v[i] * v[j];
+				m[i][j] = v[i] * u[j];
 			}
 		}
 		return m;
+	}
+
+	public static double[] copy(double[] a){
+		return Arrays.copyOf(a, a.length);
+	}
+	
+	public static double[][] copy(double[][] a) {
+		double[][] copy = new double[a.length][];
+		for(int i = 0; i < copy.length; i++){
+			copy[i] = Arrays.copyOf(a[i],a[i].length);
+		}
+		return copy;
+	}
+	
+	public static String size(Object a){
+		if(!a.getClass().isArray()){
+			throw new IllegalArgumentException("a must be an array");
+		}
+		StringBuilder sb = new StringBuilder("[");
+		int l = 0;
+		while(a.getClass().isArray() && (l = Array.getLength(a)) > 0){
+			sb.append(l).append(", ");
+			a = Array.get(a,0);
+		}
+		sb.replace(sb.length() - 2, sb.length(), "]");
+		return sb.toString();
 	}
 	
 }
