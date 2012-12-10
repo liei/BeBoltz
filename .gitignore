@@ -9,4 +9,5 @@
 *.aux
 *.bbl
 *.blg
+*.synctex.gz
 /images
