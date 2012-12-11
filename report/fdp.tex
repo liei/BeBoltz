@@ -386,6 +386,7 @@ In \cite{farabet} a CNN is created which is scale invariant, for the purpose of 
 
 The importance of scale invariance, in regards to this task, is obvious: it is desirable for a ``small person'', i.e. a person in the background of the image, to be identified as a person even if the training set only contains images where the persons appear in the foreground.
 
+This problem can be solved by extending the concept of weight sharing over locations, to sharing weights over scales. The input image is rescaled to to give a multiscale pyramid of images. Each image in the pyramid is run through a CNN that all share their weights. Then the feature maps from each network is concatenated to give the final feature map that is used for classification.
 
 \subsection{Multi-column deep neural network}
 In \cite{ciresan} and \cite{ciresan2} a multi-column deep convolutional network (MCDNN) is used to improve the state-of-the-art on several classification tasks using e.g. the MNIST and NORB dataset.  Traditional CNNs, with randomly initialized weights, are initialized and all of them trained either one the same training sets or distorted variants.  The final classification is done with a democratic vote between the columns.
