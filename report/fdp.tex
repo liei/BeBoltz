@@ -386,15 +386,7 @@ In \cite{farabet} a CNN is created which is scale invariant, for the purpose of 
 
 The importance of scale invariance, in regards to this task, is obvious: it is desirable for a ``small person'', i.e. a person in the background of the image, to be identified as a person even if the training set only contains images where the persons appear in the foreground.
 
-The way the problem of scale invariance is solved is by scaling the images and then training multiple networks on the various features found in the differently scaled images.
-
-
-
-Mutliscale CNN used for scene parsing. Image is rescaled and several
-networks are trained in parallel on different scales. Making the network
-scale invariant.
-
-
+This problem can be solved by extending the concept of weight sharing over locations, to sharing weights over scales. The input image is rescaled to to give a multiscale pyramid of images. Each image in the pyramid is run through a CNN that all share their weights. Then the feature maps from each network is concatenated to give the final feature map that is used for classification.
 
 \subsection{Multi-column deep neural network}
 \cite{ciresan}
