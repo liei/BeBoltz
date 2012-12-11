@@ -59,7 +59,7 @@ Tormund S. Haus}
 \clearpage
 \section{Introduction}
 
-This report details the work done this semester in the specialization project.  The goal of the project was to investigate deep belief networks. Specifically, to implement a deep belief network (DBN), using restricted Boltzman machines (RBM) as building blocks.  At the beginning of the semester we had decided that these networks were interesting enough, in our eyes, that we wanted to work with them for a full year.  Thus, another goal of the project was to figure out what tasks these networks excel at, and where they come up short.  We then planned to use that knowledge to find a suitable project for the upcoming master thesis.
+This report details the work done this semester in the specialization project.  The goal of the project was to investigate deep belief networks. Specifically, to implement a deep belief network (DBN), using restricted Boltzman machines (RBM) as building blocks.  Implementing these networks, based on scientific papers, proved to be a much larger challenge than expected.  Instead of writing about a failed implementation attempt, with entirely uninteresting results, this report will be a state of the art, where we take a look at some of the interesting technologies we've encountered throughout this semester.  At the beginning of the semester we had decided that these networks were interesting enough, in our eyes, that we wanted to work with them for a full year.  Thus, another goal of the project was to figure out what tasks these networks excel at, and where they come up short.  We then planned to use that knowledge to find a suitable project for the upcoming master thesis.
 
 
 \section{Artificial Neural Networks}
@@ -135,10 +135,10 @@ Backpropagation can take a long time to converge to a solution, which may be a l
 
 \begin{enumerate}
 \item Adding a new layer, of same size, adds a lot more connections.  In a fully connected, feed-forward, network adding another layer of N nodes will create an additional $N^2$ connections, whereas adding another node only adds $N$ new connections.
-\item It is hard to meaningfully propagate an error signal through a very deep network.  Intuitively this makes sense, because as the network grows in depth it gets harder and harder to assign blame for a bad result.
+\item It is hard to meaningfully propagate an error signal through a very deep network.  If the weights are very small the gradient will be tiny at the start of the network.  If the weights are large, the gradients might be more reasonable, but we are likely to get stuck in a local minima of a highly multimodal landscape.
 \end{enumerate}
 
-In \cite{bengio09} Bengio makes a convincing case for why deep architectures are preferable to shallow ones.  The key point being that shallow networks are unable to efficiently encode certain functions.  These function are what the author calls \textit{highly varying functions}: functions where a piecewise-linear approximation of the function would require a large number of pieces.  In general this puts traditional ANNs at a disadvantage, and particularly so the ones being trained with backpropagation.
+In \cite{bengio09} Bengio makes a convincing case for why deep architectures are preferable to shallow ones.  The key point being that shallow networks are unable to efficiently encode certain functions.  These function are what the author calls \textit{highly varying functions}: functions where a piecewise-linear approximation of the function would require a large number of pieces.  In general this puts traditional ANNs at a disadvantage, and particularly so the ones being trained only with backpropagation.
 
 \section{Restricted Boltzman Machines}
 
@@ -182,16 +182,16 @@ A Boltzman machine (BM) is a fully connected network of neuron-like units.  The 
 
 Although RBMs might be unable to efficiently represent some distributions that can be compactly represented by a BM, it can be shown that an RBM, given enough hidden units, can represent any distribution\cite{le08}.  In addition, unless the RBM already perfectly models the training distribution, adding another hidden node (with correct weights and biases) always improves the model\cite{le08}.
 
-The restricted Boltzman machine is so named because the energy metaphor is borrowed from physics.  In physics the Boltzman distribution describes the fractional number of particles occupying a set of states with a given energy and temperature.  In our case each input vector has a corresponding energy level.  During training this multi-dimensional energy landscape will be excavated to create ravines with clusters of training cases.  If the task is handwritten digit recognition then each digit class will map to a ravine in the energy landscape.  As in physics, the lower energy states are the most stable.
+The restricted Boltzman machine is so named because the energy metaphor is borrowed from physics.  In physics, the Boltzman distribution describes the fractional number of particles occupying a set of states with a given energy and temperature.  In our case, each input vector has a corresponding energy level.  During training this multi-dimensional energy landscape will be excavated to create ravines with clusters of training cases.  If the task is handwritten digit recognition then each digit class will map to a ravine in the energy landscape.  As in physics, the lower energy states are the most stable.
 
-An RBM is not limited to doing discrimination, it is a generative model.  This means that the trained model can show its user what it believes in.  Sampling from the model is done using a process called Gibbs sampling.  To perform Gibbs sampling we clamp an input on the visible layer which activates the hidden layer.  The hidden layer activation is in turn used to activate the visible layer.  If we repeat this process sufficiently many times it will converge.  We can start the process off by sending in an instance of training data, e.g an example of a handwritten 9, this will seed the model in a favorable way and the process of Gibbs sampling will converge quicker.  In practice this means starting the model off inside the energy ravine containing known examples of other 9s and then having the model wander around until it settles on a state.  If we start the sampling process off with a random input vector, the process will take longer to converge and we are unable to affect which area of the energy landscape is explored to find a stable energy state.
+An RBM is not limited to doing discrimination, it is a generative model.  This means that the trained model can show its user what it believes in.  Sampling from the model is done using a process called Gibbs sampling.  To perform Gibbs sampling we clamp an input on the visible layer, which activates the hidden layer.  The hidden layer activation is in turn used to activate the visible layer.  If we repeat this process sufficiently many times it will converge.  We can start the process off by sending in an instance of training data, e.g an example of a handwritten 9, this will seed the model in a favorable way and the process of Gibbs sampling will converge quicker.  In practice this means starting the model off inside the energy ravine containing known examples of other 9s and then having the model wander around until it settles on a state.  If we start the sampling process off with a random input vector, the process will take longer to converge and we are unable to affect which area of the energy landscape is explored to find a stable energy state.
 
 \section{Autoencoders}
 
- An autoencoder takes an input $\mathbf{x} \in [0,1]^d$ and maps it--the encoding part--to a representation in the hidden units, $\mathbf{y} \in [0,1]^{d'}$, through a deterministic mapping:
+An autoencoder takes an input $\mathbf{x} \in [0,1]^d$ and maps it--the encoding part--to a representation in the hidden units, $\mathbf{y} \in [0,1]^{d'}$, through a deterministic mapping:
  $\mathbf{y} = s(\mathbf{W}\mathbf{x} + \mathbf{b})$ where $s$ is a non-linear function, e.g. a function from the Sigmoid family.
 
- The latent representation $\mathbf{y}$, or \textit{code}, is then mapped back--the decoding part--into a reconstruction $\mathbf{z} = s(\mathbf{W'}\mathbf{y} + \mathbf{b'})$.  The transformation is completely analogue with the encoding step and $\mathbf{z}$ has the same shape as $\mathbf{x}$.  Note that ' does not mean that the vectors or matrices are transposed in this context.
+The latent representation $\mathbf{y}$, or \textit{code}, is then mapped back--the decoding part--into a reconstruction $\mathbf{z} = s(\mathbf{W'}\mathbf{y} + \mathbf{b'})$.  The transformation is completely analogue with the encoding step and $\mathbf{z}$ has the same shape as $\mathbf{x}$.  Note that ' does not mean that the vectors or matrices are transposed in this context.
 
 Optionally we can let $\mathbf{W'} = \mathbf{W}^T$.  Using this constraint we say that the weights are \textit{tied}.  This same terminology is used for RBMs as well and in that context it means that we are using the same weights for discrimination and generation.
 
@@ -204,7 +204,7 @@ The parameters of the autoencoder $W, b and b'$ are optimized such that the aver
     \begin{tikzpicture}[->,ultra thick,scale=4]
       \tikzstyle{every node}=[draw,shape=circle,minimum size=1.3cm,scale=4,text=,scale=0.3]
 
-      \node[draw=none,anchor=north,text width=0.1cm,text=,scale=1,font=\huge] (input) at (-0.3,4.7) {Input}; %
+      \node[draw=none,anchor=north,text width=0.1cm,text=,scale=1,font=\huge] (input) at (-0.3,4.7) {Input};
       \node (v0) at (0,1.5) {+1};
       \node (v1) at (0,2) {};
       \node (v2) at (0,2.5) {};
@@ -308,7 +308,7 @@ When the initial weights are just right, gradient decent works quite well.
 
 \subsection{Using autoencoders}
 
-A deep belief network can also be created by stacking multiple (denoising) autoencoders.  The process is entirely analogous to the situation with RBMs.  First the network is trained unsupervised pre-training and then fine-tuned using an algorithm like backpropagation.  In \cite{bengio07} DBN using stacked denoising autoencoders were found to perform as good, or better, than DBN networks of stacked RBMs, on the MNIST dataset.
+A deep belief network can also be created by stacking multiple (denoising) autoencoders.  The process is entirely analogous to the situation with RBMs.  First the network is trained unsupervised pre-training and then fine-tuned using an algorithm like backpropagation.  In \cite{bengio07} DBNs using stacked denoising autoencoders were found to perform as good, or better, than DBN networks of stacked RBMs, on the MNIST dataset.
 
 \section{Convolutional Neural Networks}
 
