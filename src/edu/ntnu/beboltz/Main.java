@@ -6,10 +6,11 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
+import edu.ntnu.beboltz.dataset.Dataset;
+import edu.ntnu.beboltz.dataset.Mnist;
 import edu.ntnu.beboltz.rbm.LabeledRbm;
 import edu.ntnu.beboltz.rbm.Rbm;
 import edu.ntnu.beboltz.util.ArrayUtil;
-import edu.ntnu.beboltz.util.DataSet;
 import edu.ntnu.beboltz.util.Util;
 
 public class Main {
@@ -22,11 +23,11 @@ public class Main {
 		System.out.print("loading...");
 		double start = System.currentTimeMillis();
 
-		DataSet<double[]> trainSet = null;
-		DataSet<double[]> testSet = null; 
+		Dataset<double[]> trainSet = null;
+		Dataset<double[]> testSet = null; 
 		try {
-			trainSet = DataSet.loadWithLabels(DataSet.TRAIN_IMAGES, DataSet.TRAIN_LABELS);
-			testSet = DataSet.loadWithLabels(DataSet.TEST_IMAGES, DataSet.TEST_LABELS);
+			trainSet = Mnist.loadWithLabels(Dataset.TRAIN_IMAGES, Dataset.TRAIN_LABELS);
+			testSet = Mnist.loadWithLabels(Dataset.TEST_IMAGES, Dataset.TEST_LABELS);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -71,11 +72,11 @@ public class Main {
 		ImageIO.write(filterImage, "png",new File("images/filters.png"));
 	}
 
-	private static void testClassification(DataSet<double[]> testSet, LabeledRbm rbm1){
+	private static void testClassification(Dataset<double[]> testSet, LabeledRbm rbm1){
 		double[] ps = new double[10];
 		int wrong = 0;
 		int i = 0;
-		for(DataSet.Item<double[]> item : testSet){
+		for(Dataset.Item<double[]> item : testSet){
 			int label = classify(item,rbm1,ps);
 			if(label != item.label){
 //				System.out.printf("wrong%d  item.label:%d, label:%d%n",i,item.label,label);
@@ -96,7 +97,7 @@ public class Main {
 		System.out.printf("Error rate: %.2f%n",((double)wrong/testSet.size()));
 	}
 	
-	private static int classify(DataSet.Item<double[]> item, LabeledRbm rbm1, double[] ps){
+	private static int classify(Dataset.Item<double[]> item, LabeledRbm rbm1, double[] ps){
 		double[] sample = rbm1.sample(item.data,10);
 		
 		double maxProb = 0;
@@ -113,12 +114,12 @@ public class Main {
 		return label;
 	}
 	
-	private static void sample(DataSet<double[]> dataSet, LabeledRbm rbm, int samples) throws IOException {
+	private static void sample(Dataset<double[]> dataSet, LabeledRbm rbm, int samples) throws IOException {
 		for(int i = 0; i < samples; i++){
 			System.out.print("Sampling...");
 			double start = System.currentTimeMillis();
 			
-			DataSet.Item<double[]> randItem = dataSet.randomItem();
+			Dataset.Item<double[]> randItem = dataSet.randomItem();
 			double[] sample = rbm.sample(randItem.data,1000);
 			
 			BufferedImage sampleImage = Util.makeImage(sample, 28);

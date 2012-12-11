@@ -3,9 +3,9 @@ package edu.ntnu.beboltz.rbm;
 import java.io.Serializable;
 import java.util.Arrays;
 
+import edu.ntnu.beboltz.dataset.Dataset;
 import edu.ntnu.beboltz.mlp.Layer;
 import edu.ntnu.beboltz.util.ArrayUtil;
-import edu.ntnu.beboltz.util.DataSet;
 import edu.ntnu.beboltz.util.Util;
 
 
@@ -63,7 +63,7 @@ public class LabeledRbm extends Layer<double[]> implements Serializable{
 		return visibleUnitsBias;
 	}
 
-	public void trainLabeled(DataSet<double[]> trainingCases, int epochs) {
+	public void trainLabeled(Dataset<double[]> trainingCases, int epochs) {
 		if(!trainingCases.isLabeled())
 			throw new IllegalArgumentException("The training cases must be labeled");
 
@@ -71,7 +71,7 @@ public class LabeledRbm extends Layer<double[]> implements Serializable{
 		for (int epoch = 0; epoch < epochs; epoch++) {
 			System.out.printf("  epoch %d...",epoch);
 			start = System.currentTimeMillis();
-			for (DataSet.Item<double[]> trainingCase : trainingCases) {
+			for (Dataset.Item<double[]> trainingCase : trainingCases) {
 				double[] labels = ArrayUtil.zeros(numLabelUnits);
 				labels[trainingCase.label] = 1.0;
 				rbmUpdate(trainingCase.data,labels);

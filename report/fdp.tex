@@ -280,7 +280,9 @@ The parameters of the autoencoder $W, b and b'$ are optimized such that the aver
   \label{fig:ae}
 \end{figure}
 
-The gist of it all is that the autoencoder does its best to replicate the input.  The autoencoder drawn in \ref{fig:ae} is perhaps the most common form, where the layer(s) between the input and output layer has a lower dimension.  This will force the autoencoder to learn a compressed representation of the input vector, which it then uses to create the output.  Intuitively, one would think that if the intermediary representation was of the same, or higher dimension, the autoencoder would simply learn the identity function.  Bengio et al. tackled this question in \cite{bengio07} and found that ``layers with non-decreasing layer sizes generalize well'', they speculate that this might be explained by their use of stochastic gradient decent and weight decay.  In other words in the general case, we might risk learning the identity function.
+The gist of it all is that the autoencoder does its best to replicate the input.  The autoencoder drawn in \ref{fig:ae} is perhaps the most common type, where the layer(s) between the input and output layer has a lower dimension.  This will force the autoencoder to learn a compressed representation of the input vector, which it then uses to create the output.  Intuitively, one would think that if the intermediary representation was of the same, or higher dimension, the autoencoder would simply learn the identity function.  Bengio et al. tackled this question in \cite{bengio07} and found that autoencoders with non-decreasing layer sizes also generalize well.  They do, however, speculate that this might be explained by their use of stochastic gradient decent and weight decay.  In other words in the general case, we might risk learning the identity function.
+
+A final point about autoencoders is worth mentioning: if the autoencoder is built using only linear hidden units, i.e $\mathbf{s}$ is picked from the family of linear functions, then training the autoencoder is equivalent to performing principal component analysis (PCA).
 
 \subsection{Denoising Autoencoders}
 
@@ -310,14 +312,38 @@ When the initial weights are just right, gradient decent works quite well.
 
 A deep belief network can also be created by stacking multiple (denoising) autoencoders.  The process is entirely analogous to the situation with RBMs.  First the network is trained unsupervised pre-training and then fine-tuned using an algorithm like backpropagation.  In \cite{bengio07} DBNs using stacked denoising autoencoders were found to perform as good, or better, than DBN networks of stacked RBMs, on the MNIST dataset.
 
+Another related type of network can be found in \cite{hinton06reducing}.  In this paper, which is about dimensionality reduction of data using ANNs, a three RBMs of dimensions 2000-1000, 1000-500 and 500-30 are trained using a greedy unsupervised approach, as discussed earlier.  The weights are then \textit{unrolled} to create a new network of structure 2000-1000-500-30-500-1000-2000, which is then fine-tuned using backpropagation.  This network is itself an autoencoder and is referred to as a \textit{deep autoencoder}.
+
 \section{Convolutional Neural Networks}
+
+Only way to do deep networks before [Hinton2006].
+Why do we need to use a CNN,
+What is a CNN
 
 \subsection{Neocognitron}
 
+First CNN, though does not use the name.
+Super complicated, based on article on cat visual center in brain.
+
+\subsection{Multiscale Convolutional Network}
+
+Mutliscale CNN used for scene parsing. Image is rescaled and several
+networks are trained in parallel on different scales. Making the network
+scale invariant.
+
+
+
 \subsection{Multi-column deep neural network}
+
+Trains several CNN on different preprocessed versions of the data. Take an average
+of the different column to decide a class. Uses winner takes all pooling.
+Human level accuracy on Mnist dataset (0.23 \%).
+
 
 \subsection{Convolutional Deep Belief Network}
 
+Uses a Convolutional RBM to make a generative Convolutional belief network.
+Uses probabalistic pooling to make the pooling generative.
 
 \section{Conclusion}
 

@@ -3,7 +3,6 @@ package edu.ntnu.beboltz;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -13,10 +12,11 @@ import java.util.Arrays;
 
 import javax.imageio.ImageIO;
 
+import edu.ntnu.beboltz.dataset.Dataset;
+import edu.ntnu.beboltz.dataset.Mnist;
 import edu.ntnu.beboltz.rbm.LabeledRbm;
 import edu.ntnu.beboltz.rbm.Rbm;
 import edu.ntnu.beboltz.util.ArrayUtil;
-import edu.ntnu.beboltz.util.DataSet;
 import edu.ntnu.beboltz.util.Util;
 
 public class Dbn {
@@ -91,7 +91,7 @@ public class Dbn {
 		
 		// PERFORM numCDiters GIBBS SAMPLING ITERATIONS USING THE TOP LEVEL
 		// UNDIRECTED ASSOCIATIVE MEMORY
-		double[] negtopstates = waketopstates; // to initialize loop
+		double[] negtopstates = ArrayUtil.copy(waketopstates); // to initialize loop
 		double[] negpenstates = new double[pengenbiases.length];
 		double[] neglabprobs = new double[labgenbiases.length];
 		for(int i = 1; i < sampleSteps; i++){
@@ -274,37 +274,40 @@ public class Dbn {
 		System.out.print("loading...");
 		double start = System.currentTimeMillis();
 
-		DataSet<double[]> trainSet = null;
-		DataSet<double[]> testSet = null; 
+		Dataset<double[]> trainSet = null;
+		Dataset<double[]> testSet = null; 
 		try {
-			trainSet = DataSet.loadWithLabels(DataSet.TRAIN_IMAGES, DataSet.TRAIN_LABELS);
-			testSet = DataSet.loadWithLabels(DataSet.TEST_IMAGES, DataSet.TEST_LABELS);
+			trainSet = Mnist.loadWithLabels(Dataset.TRAIN_IMAGES, Dataset.TRAIN_LABELS,1,6,9);
+			testSet = Mnist.loadWithLabels(Dataset.TEST_IMAGES, Dataset.TEST_LABELS,1,6,9);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		double stop = System.currentTimeMillis();
 		System.out.printf(" done (%.2f s)%n",(stop-start)/1000);
 		
-		Rbm hidpen = (Rbm)load("hidpen.rbm"); //new Rbm(NUM_HIDDEN_UNITS, trainSet.getItem(0).data.length,LEARNING_RATE);
-		LabeledRbm penlabtop = (LabeledRbm)load("penlabtop.rbm");//new LabeledRbm(NUM_HIDDEN_UNITS * 2, NUM_HIDDEN_UNITS,10,LEARNING_RATE);
+		Rbm hidpen = new Rbm(NUM_HIDDEN_UNITS, trainSet.getItem(0).data.length,LEARNING_RATE);
+		LabeledRbm penlabtop = new LabeledRbm(NUM_HIDDEN_UNITS * 2, NUM_HIDDEN_UNITS,10,LEARNING_RATE);
+
+//		Rbm hidpen = (Rbm)load("hidpen.rbm");
+//		LabeledRbm penlabtop = (LabeledRbm)load("penlabtop.rbm");
 		
-//		start = System.currentTimeMillis();
-//		System.out.println("training hidpenRbm...");
-//		hidpen.trainLabeled(trainSet, EPOCHS);
-//		stop = System.currentTimeMillis();
-//		System.out.printf(" done (%.2f s)%n",(stop-start)/1000);
-//
-//		saveToFile(hidpen,"hidpen.rbm");
-//		
-//		DataSet<double[]> trainSet2 = trainSet.passThrough(hidpen);
-//
-//		start = System.currentTimeMillis();
-//		System.out.println("training penlabtopRbm...");
-//		penlabtop.trainLabeled(trainSet2, EPOCHS);
-//		stop = System.currentTimeMillis();
-//		System.out.printf(" done (%.2f s)%n",(stop-start)/1000);
-//		
-//		saveToFile(penlabtop,"penlabtop.rbm");
+		start = System.currentTimeMillis();
+		System.out.println("training hidpenRbm...");
+		hidpen.trainLabeled(trainSet, EPOCHS);
+		stop = System.currentTimeMillis();
+		System.out.printf(" done (%.2f s)%n",(stop-start)/1000);
+
+		saveToFile(hidpen,"hidpen.rbm");
+		
+		Dataset<double[]> trainSet2 = trainSet.passThrough(hidpen);
+
+		start = System.currentTimeMillis();
+		System.out.println("training penlabtopRbm...");
+		penlabtop.trainLabeled(trainSet2, EPOCHS);
+		stop = System.currentTimeMillis();
+		System.out.printf(" done (%.2f s)%n",(stop-start)/1000);
+		
+		saveToFile(penlabtop,"penlabtop.rbm");
 		
 		Dbn dbn = new Dbn(hidpen,penlabtop);
 		
@@ -352,11 +355,11 @@ public class Dbn {
 	}
 
 
-	private static void testClassification(DataSet<double[]> testSet, Dbn dbn){
+	private static void testClassification(Dataset<double[]> testSet, Dbn dbn){
 		double[] ps = new double[10];
 		int wrong = 0;
 		int i = 0;
-		for(DataSet.Item<double[]> item : testSet){
+		for(Dataset.Item<double[]> item : testSet){
 			int label = classify(item,dbn,ps);
 			if(label != item.label){
 //				System.out.printf("wrong%d  item.label:%d, label:%d%n",i,item.label,label);
@@ -377,7 +380,7 @@ public class Dbn {
 		System.out.printf("Error rate: %.2f%n",((double)wrong/testSet.size()));
 	}
 	
-	private static int classify(DataSet.Item<double[]> item, Dbn dbn, double[] ps){
+	private static int classify(Dataset.Item<double[]> item, Dbn dbn, double[] ps){
 		double[] sample = dbn.sample(item.data,10);
 		
 		double maxProb = 0;
@@ -410,15 +413,15 @@ public class Dbn {
 		return labels;
 	}
 
-	private void train(DataSet<double[]> trainSet, int epochs) {
+	private void train(Dataset<double[]> trainSet, int epochs) {
 		double start, stop;
 		for (int epoch = 0; epoch < epochs; epoch++) {
 			System.out.printf("  epoch %d...",epoch);
 			start = System.currentTimeMillis();
-			for (DataSet.Item<double[]> trainingCase : trainSet) {
+			for (Dataset.Item<double[]> trainingCase : trainSet) {
 				double[] labels = ArrayUtil.zeros(10);
 				labels[trainingCase.label] = 1.0;
-				upDown(trainingCase.data,labels,10,0.1);
+				upDown(trainingCase.data,labels,50,0.1);
 			}
 			stop = System.currentTimeMillis();
 			System.out.printf("done (%.2f)%n",(stop-start)/1000);
