@@ -11,6 +11,10 @@
 \usepackage{fancybox}
 \usepackage{verbatim}
 \usepackage{wrapfig}
+\usepackage{graphicx}
+
+\newcommand{\bigstar}{\mathop{\Huge \mathlarger{\mathlarger{*}}}}
+
 
 \definecolor{dkgreen}{rgb}{0,0.6,0}
 \definecolor{gray}{rgb}{0.5,0.5,0.5}
@@ -47,7 +51,7 @@
 % \lstset{language=C,caption={Descriptive Caption Text},label=DescriptiveLabel}
 
 
-\title{FDP -- A closer look at Deep Belief Networks and Restricted Boltzman Machines}
+\title{Specialization Project \\ A closer look at deep artificial neural networks}
 \author{Lars Andersen \\
 Tormund S. Haus}
 \date{\today}
@@ -60,7 +64,6 @@ Tormund S. Haus}
 \section{Introduction}
 
 This report details the work done this semester in the specialization project.  The goal of the project was to investigate deep belief networks. Specifically, to implement a deep belief network (DBN), using restricted Boltzman machines (RBM) as building blocks.  Implementing these networks, based on scientific papers, proved to be a much larger challenge than expected.  Instead of writing about a failed implementation attempt, with entirely uninteresting results, this report will be a state of the art, where we take a look at some of the interesting technologies we've encountered throughout this semester.  At the beginning of the semester we had decided that these networks were interesting enough, in our eyes, that we wanted to work with them for a full year.  Thus, another goal of the project was to figure out what tasks these networks excel at, and where they come up short.  We then planned to use that knowledge to find a suitable project for the upcoming master thesis.
-
 
 \section{Artificial Neural Networks}
 
@@ -316,16 +319,76 @@ Another related type of network can be found in \cite{hinton06reducing}.  In thi
 
 \section{Convolutional Neural Networks}
 
-Only way to do deep networks before [Hinton2006].
-Why do we need to use a CNN,
-What is a CNN
+The first convolutional neural network (CNN) was described in Fukushima's seminal paper on the Neocognitron\cite{fukushima}.  The modern terminology was not used in this paper, but the key principles are the same.  Inspired by the work done by Hubel and Wiesel, on the cat's visual cortex\cite{hubel}, the goal was to create a biologically plausible ANN to explore image recognition (specifically, images of digits).  One of the key insight in Fukushima's paper is that feature detection should be modular and location invariant: we should re-use the same structure in order to detect one feature in the image, regardless of the coordinates of the feature within the image.  In implementational terms, in regard to an ANN, this means we should re-use weights to detect features.
 
-\subsection{Neocognitron}
+\subsection{What is convolution}
 
-First CNN, though does not use the name.
-Super complicated, based on article on cat visual center in brain.
+The term convolution is taken from the field of image processing.  In image processing, to convolve an image, with a filter (also called kernel), means to apply the filter to each pixel in the image.  A filter is created by defining weights of neighbor pixels to a center pixel.  The product of weights and pixel values are then summed to find the new value of the center pixel.  So, if our filter is a 3x3 identity matrix, the new value of the center pixel will be the sum of the pixel values of its south-east and north-west neighbor.  A typical use-case for convolution in image processing is edge detection.
 
-\subsection{Multiscale Convolutional Network}
+The use of convolution in ANNs is quite analogous: the filter is a feature detector. The sum, of products of pixel values and weights, is not used to create a new center pixel, but instead expresses the probability that the feature being detected is present at the given location in the picture.  Thus, the result of convolving an image with a filter is a matrix of probabilities, a feature map if you will.  By convolving the image with many filters we can create several feature maps.  If we denote the k-th feature map at a given layer as $h^k$, which is determined by the weights $W^k$ and bias $b_k$ then the feature map $h^k$ is:
+
+\begin{displaymath}
+  h^{k}_{ij} = \sigma((W^k * x))_{ij} + b_k
+\end{displaymath}
+
+Where * means matrix convolution, and not multiplication, and $\sigma$ is some non-linear function, typically selected from the sigmoid family.
+
+\subsection{Max pooling}
+
+Max pooling is another important key component of CNNs.  To perform max pooling the feature maps are partitioned into non-overlapping rectangles, and for each sub-region, the output is the maximum value.  In other words, how likely the feature is to be present in the sub-region.
+
+Max pooling serves two purposes:
+
+\begin{enumerate}
+\item Reduction of computational complexity, for upper layers of the network.
+\item Provide translational and deformational invariance.
+\end{enumerate}
+
+Since max pooling provides increased robustness, in terms of the position of features within an image, it has proven to be a good way of reducing the dimensionality of the intermediary representations.
+
+If we refer back to the work done by Hubel and Wiesel the convolution step used for feature extraction corresponds to the work done by the \textit{simple cells} and the pooling operation to the work done by the \textit{complex cells} found in the visual area V1.
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=\textwidth]{mylenet.png}
+  \caption{Model of LeCun's convolutional network LeNet}
+  \label{fig:mylenet}
+\end{figure}
+
+In figure \ref{fig:mylenet} we get a descriptive view of how a CNN works.  In layer $\mathbf{S1}$ we can see 4 feature maps, describing the probabilities that 4 different features are present at various locations of the image.  $C1$ is a sub-sampling layer, where the sub-sampling operator is max pooling.  $\mathbf{C1}$ then feeds into $\mathbf{S2}$ which creates new feature maps based on more abstract features.  At the very top of the network, in LeNet, we find a fully connected multi-layer perceptron (MLP) with logistic regression.
+
+In figure \ref{fig:mylenet} we can also see how the receptive field of each detector increases in size as we move toward the to of the network.  The first convolutional layer uses filters with receptive fields which are say 4x4 in size, the receptive field of \textit{simple cells}.  The max pooling layer then looks at say a 3x3 region of the feature map and in terms of the original image each \textit{complex cell} has a receptive field of $(4 + 3 - 1)^2$ pixels of the input image, or $(rank(\mathbf{S1}) + rank(\mathbf{C1}) - 1)^2$.  Where $rank(A) = n\ \Leftrightarrow$ A is an $N\times N$ matrix.
+
+\subsection{Use of convolutional neural networks}
+
+For a long time, the only viable option for creating deep artificial neural networks was to build a convolutional network.  Deep fully connected networks trained using backpropagation were computationally intractable, but the CNNs were not.  There are several reasons for this:
+
+\begin{enumerate}
+\item The filters are small.  It is therefore not very computationally intensive to find the correct weights used to detect a feature.
+\item The complexity of the network can be controlled by choosing how many features to use at each level.
+\item The sub-sampling layers do not need training at all.
+\item The sub-sampling layers provide a reduction in dimensionality, decreasing the computational load.
+\item Shared weights, in the filters, provide a lot of bang for the buck.
+\end{enumerate}
+
+The ideas used in convolutional networks are sound, so they have not fallen out of favor.  On the contrary, they are very scalable and produce state-of-the-art results.  There are several ways to put any additional computational power to good use:
+\begin{itemize}
+\item Detect more features.
+\item Adjust the size of the filters.  Smaller filters are more computationally intensive, but afford a higher level of detail.
+\item Add more layers.
+\end{itemize}
+
+CNNs are primarily used in machine vision, because the statistics of the image is the same everywhere (a given feature is equally likely to appear anywhere in the input image) making translational invariance very important.
+
+\subsection{Multi-scale Convolutional Network}
+
+In \cite{farabet} a CNN is created which is scale invariant, for the purpose of scene parsing.  The scene parsing task consist of identifying and labeling the objects making up an image.  In practice means assigning an object class to each pixel e.g. sky, road or person.
+
+The importance of scale invariance, in regards to this task, is obvious: it is desirable for a ``small person'', i.e. a person in the background of the image, to be identified as a person even if the training set only contains images where the persons appear in the foreground.
+
+The way the problem of scale invariance is solved is by scaling the images and then training multiple networks on the various features found in the differently scaled images.
+
+
 
 Mutliscale CNN used for scene parsing. Image is rescaled and several
 networks are trained in parallel on different scales. Making the network
@@ -334,7 +397,7 @@ scale invariant.
 
 
 \subsection{Multi-column deep neural network}
-
+\cite{ciresan}
 Trains several CNN on different preprocessed versions of the data. Take an average
 of the different column to decide a class. Uses winner takes all pooling.
 Human level accuracy on Mnist dataset (0.23 \%).
@@ -342,16 +405,11 @@ Human level accuracy on Mnist dataset (0.23 \%).
 
 \subsection{Convolutional Deep Belief Network}
 
+\cite{lee}
 Uses a Convolutional RBM to make a generative Convolutional belief network.
-Uses probabalistic pooling to make the pooling generative.
+Uses probabilistic pooling to make the pooling generative.
 
 \section{Conclusion}
-
-\appendix
-
-\section{Glossary}
-
-
 
 \bibliographystyle{plain}
 \bibliography{references}
