@@ -404,6 +404,15 @@ Uses probabilistic pooling to make the pooling generative.
 
 \section{Conclusion}
 
+Various types of deep neural networks are at the bleeding edge of many classification tasks.  There are many factors which make them attractive classifiers, but chief among them are perhaps:
+\begin{enumerate}
+\item The ability to train on raw data, avoiding the need for complex feature engineering.
+\item Scalability, combined with the ever-increasing availability of computational resources.
+\item The ability to tackle a diverse range of tasks without use of explicit domain knowledge.
+\item Performance can be improved, greatly, by doing unsupervised training on readily available unlabeled data.
+\end{enumerate}
+
+We have focused on image processing, partly because we find this application most interesting, but also because the literature itself favors this task.  The reason for this favoritism is not only due to flights of fancy, but because certain mechanisms, like weight-sharing and max-pooling work very well when the input data is contiguous (e.g. as image data is, or a contiguous sound wave).  Another reason is that the imaging tasks represent real challenges due to both the size and high dimensionality of the input data, making the task a worthy research subject.
 \bibliographystyle{plain}
 \bibliography{references}
 
