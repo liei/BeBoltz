@@ -333,9 +333,9 @@ The use of convolution in ANNs is quite analogous: the filter is a feature detec
 
 Where * means matrix convolution, and not multiplication, and $\sigma$ is some non-linear function, typically selected from the sigmoid family.
 
-\subsection{Max pooling}
+\subsection{Pooling}
 
-Max pooling is another important key component of CNNs.  To perform max pooling the feature maps are partitioned into non-overlapping rectangles, and for each sub-region, the output is the maximum value.  In other words, how likely the feature is to be present in the sub-region.
+Pooling is another important key component of CNNs.  There are various types of pooling, but the most common ones are max and mean-pooling.  To perform max pooling the feature maps are partitioned into non-overlapping rectangles, and for each sub-region, the output is the maximum value.  In other words, how likely the feature is to be present in the sub-region.
 
 Max pooling serves two purposes:
 
@@ -386,12 +386,12 @@ In \cite{farabet} a CNN is created which is scale invariant, for the purpose of 
 
 The importance of scale invariance, in regards to this task, is obvious: it is desirable for a ``small person'', i.e. a person in the background of the image, to be identified as a person even if the training set only contains images where the persons appear in the foreground.
 
-This problem can be solved by extending the concept of weight sharing over locations, to sharing weights over scales. The input image is rescaled to to give a multiscale pyramid of images. Each image in the pyramid is run through a CNN that all share their weights. Then the feature maps from each network is concatenated to give the final feature map that is used for classification.
+The problem of scale invariance can be solved by extending the concept of weight sharing over locations, to sharing weights over scales.  The weights are shared among different CNNs.  During classification the image is scaled--3 different sizes are used in the paper--and each version is sent to one CNN.  The output feature vector represents the concatenation of the feature vectors from the 3 CNNs.
 
 \subsection{Multi-column deep neural network}
 In \cite{ciresan} and \cite{ciresan2} a multi-column deep convolutional network (MCDNN) is used to improve the state-of-the-art on several classification tasks using e.g. the MNIST and NORB dataset.  Traditional CNNs, with randomly initialized weights, are initialized and all of them trained either one the same training sets or distorted variants.  The final classification is done with a democratic vote between the columns.
 
-Max pooling is used to create a winner-takes-all effect where only the winner neurons receive training.  The authors argue that this represents a biologically plausible mechanism where the ever decreasing number of changes per time interval lead to reduced energy consumption.
+Max pooling is used to create a winner-takes-all effect where only the winner neurons receive training.  The authors argue that this represents a biologically plausible mechanism where the ever decreasing number of changes per time interval lead to reduced energy consumption. TODO insert image.
 
 In order to speed up training the entire system is optimized to run on GPUs. The authors estimate that using GPUs leads to an increase in computational power of around 50-100x.  Furthermore, this additional processing power removes the need for pre-training completely.  The network is trained through no other means than an online version of backpropagation (weight updates after each training case).
 
@@ -399,7 +399,10 @@ This system is the first one able to achieve human-competitive results on the MN
 
 \subsection{Convolutional Deep Belief Network}
 
-\cite{lee}
+In \cite{lee} a convolutional deep belief network is created.\
+
+TODO Write section.
+
 Uses a Convolutional RBM to make a generative Convolutional belief network.
 Uses probabilistic pooling to make the pooling generative.
 
@@ -414,6 +417,9 @@ Various types of deep neural networks are at the bleeding edge of many classific
 \end{enumerate}
 
 We have focused on image processing, partly because we find this application most interesting, but also because the literature itself favors this task.  The reason for this favoritism is not only due to flights of fancy, but because certain mechanisms, like weight-sharing and max-pooling work very well when the input data is contiguous (e.g. as image data is, or a contiguous sound wave).  Another reason is that the imaging tasks represent real challenges due to both the size and high dimensionality of the input data, making the task a worthy research subject.
+
+TODO this ending is a bit abrupt.  Perhaps write some shit about the back and forth between industry and academia.
+
 \bibliographystyle{plain}
 \bibliography{references}
 
