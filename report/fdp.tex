@@ -188,7 +188,7 @@ Although RBMs might be unable to efficiently represent some distributions that c
 
 The restricted Boltzman machine is so named because the energy metaphor is borrowed from physics.  In physics, the Boltzman distribution describes the fractional number of particles occupying a set of states with a given energy and temperature.  In our case, each input vector has a corresponding energy level.  During training this multi-dimensional energy landscape will be excavated to create ravines with clusters of training cases.  If the task is handwritten digit recognition then each digit class will map to a ravine in the energy landscape.  As in physics, the lower energy states are the most stable.
 
-An RBM is not limited to doing discrimination, it is a generative model.  This means that the trained model can show its user what it believes in.  Sampling from the model is done using a process called Gibbs sampling.  To perform Gibbs sampling we clamp an input on the visible layer, which activates the hidden layer.  The hidden layer activation is in turn used to activate the visible layer.  If we repeat this process sufficiently many times it will converge.  We can start the process off by sending in an instance of training data, e.g an example of a handwritten 9, this will seed the model in a favorable way and the process of Gibbs sampling will converge quicker.  In practice this means starting the model off inside the energy ravine containing known examples of other 9s and then having the model wander around until it settles on a state.  If we start the sampling process off with a random input vector, the process will take longer to converge and we are unable to affect which area of the energy landscape is explored to find a stable energy state.
+An RBM is not limited to doing discrimination, it is a generative model.  This means that the trained model can show its user what it believes in.  Sampling from the model is done using a process called Gibbs sampling.  To perform Gibbs sampling we clamp an input on the visible layer, which activates the hidden layer.  The hidden layer activation is in turn used to activate the visible layer.  If we repeat this process sufficiently many times it will converge.  We can start the process off by sending in an instance of training data, e.g an example of a handwritten 9. This will seed the model in a favorable way and the process of Gibbs sampling will converge quicker.  In practice this means starting the model off inside the energy ravine containing known examples of other 9s and then having the model wander around until it settles on a state.  If we start the sampling process off with a random input vector, the process will take longer to converge and we are unable to affect which area of the energy landscape is explored to find a stable energy state.
 
 \section{Autoencoders}
 
@@ -199,7 +199,7 @@ The latent representation $\mathbf{y}$, or \textit{code}, is then mapped back--t
 
 Optionally we can let $\mathbf{W'} = \mathbf{W}^T$.  Using this constraint we say that the weights are \textit{tied}.  This same terminology is used for RBMs as well and in that context it means that we are using the same weights for discrimination and generation.
 
-The parameters of the autoencoder $W, b and b'$ are optimized such that the average reconstruction error is minimized.  One way to do this would be to use the \textit{squared error} to guide the weight changes.
+The parameters of the autoencoder $\mathbf{W}$, $\mathbf{b}$ and $\mathbf{b'}$ are optimized such that the average reconstruction error is minimized.  One way to do this would be to use the \textit{squared error} to guide the weight changes.
 
 \begin{figure}[htb]
   \centering
@@ -284,7 +284,7 @@ The parameters of the autoencoder $W, b and b'$ are optimized such that the aver
   \label{fig:ae}
 \end{figure}
 
-The gist of it all is that the autoencoder does its best to replicate the input.  The autoencoder drawn in \ref{fig:ae} is perhaps the most common type, where the layer(s) between the input and output layer has a lower dimension.  This will force the autoencoder to learn a compressed representation of the input vector, which it then uses to create the output.  Intuitively, one would think that if the intermediary representation was of the same, or higher dimension, the autoencoder would simply learn the identity function.  Bengio et al. tackled this question in \cite{bengio07} and found that autoencoders with non-decreasing layer sizes also generalize well.  They do, however, speculate that this might be explained by their use of stochastic gradient decent and weight decay.  In other words in the general case, we might risk learning the identity function.
+The gist of it all is that the autoencoder does its best to replicate the input.  The autoencoder shown in \ref{fig:ae} is perhaps the most common type, where the layer(s) between the input and output layer has a lower dimension.  This will force the autoencoder to learn a compressed representation of the input vector, which it then uses to create the output.  Intuitively, one would think that if the intermediary representation was of the same, or higher dimension, the autoencoder would simply learn the identity function.  Bengio et al. tackled this question in \cite{bengio07} and found that autoencoders with non-decreasing layer sizes also generalize well.  They do, however, speculate that this might be explained by their use of stochastic gradient decent and weight decay.  In other words in the general case, we might risk learning the identity function.
 
 A final point about autoencoders is worth mentioning: if the autoencoder is built using only linear hidden units, i.e $\mathbf{s}$ is picked from the family of linear functions, then training the autoencoder is equivalent to performing principal component analysis (PCA).
 
@@ -304,7 +304,7 @@ The motivation behind the denoising autoencoder is to attempt to answer the ques
 
 A deep belief network (DBN) can be created by stacking multiple RBMs.  When the input vector is processed by the first RBM its output is a new representation of the data.  This new representation can then be used as input to the RBM in the layer above.  The hope is that each RBM is better able to represent the data, by creating useful abstractions or simply removing noise.  In \cite{hinton06} Hinton shows that adding more layers in a DBN will always improve the model.  The use of the \textit{contrastive divergence} learning algorithm voids this guarantee, but it increases our confidence in the method to know that we can always improve the model by being patient enough in training each layer.
 
-The way to train a DBN is to use a greedy layer-wise training algorithm.  Each layer, consisting of one RBM, is trained before we move on to train the next one.  By freezing the weights after we're done training each RBM we miss out on any positive effect that might be had by the coordinated tuning of weights in two, or more, adjacent layers.  One way to overcome this inefficiency of the greedy training approach is to fine-tune the network after the greedy training phase is done.  Fine-tuning can be done using the well-known backpropagation algorithm, or some other algorithm for gradient decent.  By seeding the backpropagation algorithm with a promising state the following problems encountered using backpropagation in deep networks are solved\cite{hinton06reducing}:
+The way to train a DBN is to use a greedy layer-wise training algorithm.  Each layer, consisting of one RBM, is trained before we move on to train the next one.  By freezing the weights after we're done training each RBM we miss out on any positive effect that might be had by the coordinated tuning of weights in two, or more, adjacent layers.  One way to overcome this inefficiency of the greedy training approach is to fine-tune the network after the greedy training phase is done.  Fine-tuning can be done using the well-known backpropagation algorithm, or some other algorithm for gradient decent.  By seeding the backpropagation algorithm with a promising state (through pre-training) the following problems encountered using backpropagation in deep networks are solved\cite{hinton06reducing}:
 \begin{enumerate}
 \item If the initial weights are small the gradients in the earlier layers will be tiny and weight changes ineffectual.
 \item If the initial weights are large the network typically gets stuck in poor local minima.
@@ -314,9 +314,9 @@ When the initial weights are just right, gradient decent works quite well.
 
 \subsection{Using autoencoders}
 
-A deep belief network can also be created by stacking multiple (denoising) autoencoders.  The process is entirely analogous to the situation with RBMs.  First the network is trained unsupervised pre-training and then fine-tuned using an algorithm like backpropagation.  In \cite{bengio07} DBNs using stacked denoising autoencoders were found to perform as good, or better, than DBN networks of stacked RBMs, on the MNIST dataset.
+A deep belief network can also be created by stacking multiple (denoising) autoencoders.  The process is entirely analogous to the situation with RBMs.  First the network is trained using unsupervised pre-training and then fine-tuned using an algorithm like backpropagation.  In \cite{bengio07} DBNs using stacked denoising autoencoders were found to perform as good, or better, than DBN networks of stacked RBMs, on the MNIST dataset.
 
-Another related type of network can be found in \cite{hinton06reducing}.  In this paper, which is about dimensionality reduction of data using ANNs, a three RBMs of dimensions 2000-1000, 1000-500 and 500-30 are trained using a greedy unsupervised approach, as discussed earlier.  The weights are then \textit{unrolled} to create a new network of structure 2000-1000-500-30-500-1000-2000, which is then fine-tuned using backpropagation.  This network is itself an autoencoder and is referred to as a \textit{deep autoencoder}.
+Another related type of network can be found in \cite{hinton06reducing}.  In this paper, which is about dimensionality reduction of data using ANNs, three RBMs of dimensions 2000-1000, 1000-500 and 500-30 are trained using a greedy unsupervised approach, as discussed earlier.  The weights are then \textit{unrolled} to create a new network of structure 2000-1000-500-30-500-1000-2000, which is then fine-tuned using backpropagation.  This network is itself an autoencoder and is referred to as a \textit{deep autoencoder}.
 
 \section{Convolutional Neural Networks}
 
@@ -324,9 +324,9 @@ The first convolutional neural network (CNN) was described in Fukushima's semina
 
 \subsection{What is convolution}
 
-The term convolution is taken from the field of image processing.  In image processing, to convolve an image, with a filter (also called kernel), means to apply the filter to each pixel in the image.  A filter is created by defining weights of neighbor pixels to a center pixel.  The product of weights and pixel values are then summed to find the new value of the center pixel.  So, if our filter is a 3x3 identity matrix, the new value of the center pixel will be the sum of the pixel values of its south-east and north-west neighbor.  A typical use-case for convolution in image processing is edge detection.
+The term convolution is taken from the field of image processing.  In image processing, to convolve an image, with a filter (also called kernel), means to apply the filter to each pixel in the image.  A filter is created by defining weights of neighbor pixels to a center pixel.  The product of weights and pixel values are then summed to find the new value of the center pixel.  So, if our filter is a 3x3 identity matrix, the new value of the center pixel will be the sum of the pixel values of its south-east and north-west neighbor and the value of the center pixel itself.  A typical use-case for convolution in image processing is edge detection.
 
-The use of convolution in ANNs is quite analogous: the filter is a feature detector. The sum, of products of pixel values and weights, is not used to create a new center pixel, but instead expresses the probability that the feature being detected is present at the given location in the picture.  Thus, the result of convolving an image with a filter is a matrix of probabilities, a feature map if you will.  By convolving the image with many filters we can create several feature maps.  If we denote the k-th feature map at a given layer as $h^k$, which is determined by the weights $W^k$ and bias $b_k$ then the feature map $h^k$ is:
+The use of convolution in ANNs is quite analogous: the filter is a feature detector. The sum, of products of pixel values and weights, is not used to create a new center pixel, but instead expresses the probability that the feature being detected is present at the given location in the picture.  Thus, the result of convolving an image with a filter is a matrix of probabilities, also called a feature map.  By convolving the image with many filters we can create several feature maps.  If we denote the k-th feature map at a given layer as $h^k$, which is determined by the weights $W^k$ and bias $b_k$ then the feature map $h^k$ is:
 
 \begin{displaymath}
   h^{k}_{ij} = \sigma((W^k * x))_{ij} + b_k
@@ -336,7 +336,7 @@ Where * means matrix convolution, and not multiplication, and $\sigma$ is some n
 
 \subsection{Pooling}
 
-Pooling is another important key component of CNNs.  There are various types of pooling, but the most common ones are max and mean-pooling.  To perform max pooling the feature maps are partitioned into non-overlapping rectangles, and for each sub-region, the output is the maximum value.  In other words, how likely the feature is to be present in the sub-region.
+Pooling is another important component of CNNs.  There are various types of pooling, but the most common ones are max and mean-pooling.  To perform max pooling the feature maps are partitioned into non-overlapping rectangles, and for each sub-region, the output is the maximum value.  In other words, how likely the feature is to be present somewhere in the sub-region.
 
 Max pooling serves two purposes:
 
@@ -356,20 +356,20 @@ If we refer back to the work done by Hubel and Wiesel the convolution step used 
   \label{fig:mylenet}
 \end{figure}
 
-In figure \ref{fig:mylenet} we get a descriptive view of how a CNN works.  In layer $\mathbf{S1}$ we can see 4 feature maps, describing the probabilities that 4 different features are present at various locations of the image.  $C1$ is a sub-sampling layer, where the sub-sampling operator is max pooling.  $\mathbf{C1}$ then feeds into $\mathbf{S2}$ which creates new feature maps based on more abstract features.  At the very top of the network, in LeNet, we find a fully connected multi-layer perceptron (MLP) with logistic regression.
+In figure \ref{fig:mylenet} we get a descriptive view of how a CNN works.  In layer $\mathbf{S1}$ we can see 4 feature maps, describing the probabilities that 4 different features are present at various locations of the image.  $\mathbf{C1}$ is a sub-sampling layer performing pooling.  $\mathbf{C1}$ then feeds into $\mathbf{S2}$ which creates new feature maps based on more abstract features.  At the very top of the network, in LeNet, we find a fully connected multi-layer perceptron (MLP) with logistic regression.
 
-In figure \ref{fig:mylenet} we can also see how the receptive field of each detector increases in size as we move toward the to of the network.  The first convolutional layer uses filters with receptive fields which are say 4x4 in size, the receptive field of \textit{simple cells}.  The max pooling layer then looks at say a 3x3 region of the feature map and in terms of the original image each \textit{complex cell} has a receptive field of $(4 + 3 - 1)^2$ pixels of the input image, or $(rank(\mathbf{S1}) + rank(\mathbf{C1}) - 1)^2$.  Where $rank(A) = n\ \Leftrightarrow$ A is an $N\times N$ matrix.
+In figure \ref{fig:mylenet} we can also see how the receptive field of each detector increases in size as we move toward the to of the network.  For instance if the first convolutional layer uses filters with receptive fields which are 4x4 in size, representing the receptive field of \textit{simple cells}.  The max pooling layer might look at say a 3x3 region of the resultant feature map, and in terms of the original image, each \textit{complex cell} would then have receptive field of size $(4 + 3 - 1)^2$ pixels from the input image, or $(rank(\mathbf{S1}) + rank(\mathbf{C1}) - 1)^2$.  Where $rank(A) = n\ \Leftrightarrow$ A is an $N\times N$ matrix.
 
 \subsection{Use of convolutional neural networks}
 
-For a long time, the only viable option for creating deep artificial neural networks was to build a convolutional network.  Deep fully connected networks trained using backpropagation were computationally intractable, but the CNNs were not.  There are several reasons for this:
+For a long time (until Hinton published \cite{hinton06} in 2006) the only viable option for creating deep artificial neural networks was to use a convolutional network.  Deep fully connected networks trained using backpropagation were computationally intractable, but the CNNs were not.  There are several reasons for this:
 
 \begin{enumerate}
 \item The filters are small.  It is therefore not very computationally intensive to find the correct weights used to detect a feature.
 \item The complexity of the network can be controlled by choosing how many features to use at each level.
 \item The sub-sampling layers do not need training at all.
 \item The sub-sampling layers provide a reduction in dimensionality, decreasing the computational load.
-\item Shared weights, in the filters, provide a lot of bang for the buck.
+\item Shared weights reduces duplication of knowledge throughout the network.
 \end{enumerate}
 
 The ideas used in convolutional networks are sound, so they have not fallen out of favor.  On the contrary, they are very scalable and produce state-of-the-art results.  There are several ways to put any additional computational power to good use:
@@ -383,20 +383,32 @@ CNNs are primarily used in machine vision, because the statistics of the image i
 
 \subsection{Multi-scale Convolutional Network}
 
-In \cite{farabet} a CNN is created which is scale invariant, for the purpose of scene parsing.  The scene parsing task consist of identifying and labeling the objects making up an image.  In practice means assigning an object class to each pixel e.g. sky, road or person.
+In \cite{farabet} a CNN is created, which is scale invariant, for the purpose of scene parsing.  The scene parsing task consist of identifying and labeling the objects making up an image.  In practice this means assigning an object class to each pixel in the image e.g. sky, road or person.
 
 The importance of scale invariance, in regards to this task, is obvious: it is desirable for a ``small person'', i.e. a person in the background of the image, to be identified as a person even if the training set only contains images where the persons appear in the foreground.
 
 The problem of scale invariance can be solved by extending the concept of weight sharing over locations, to sharing weights over scales.  The weights are shared among different CNNs.  During classification the image is scaled--3 different sizes are used in the paper--and each version is sent to one CNN.  The final feature vector represents the concatenation of the feature vectors from the 3 CNNs.
 
-\subsection{Multi-column deep neural network}
-In \cite{ciresan} and \cite{ciresan2} a multi-column deep convolutional network (MCDNN) is used to improve the state-of-the-art on several classification tasks using e.g. the MNIST and NORB dataset.  Traditional CNNs, with randomly initialized weights, are initialized and all of them trained either one the same training sets or distorted variants.  The final classification is done with a democratic vote between the columns.
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=\textwidth]{mymscnn.png}
+  \caption{Depiction of generation of feature vector for various scales.}
+  \label{fig:mscn}
+\end{figure}
 
-Max pooling is used to create a winner-takes-all effect where only the winner neurons receive training.  The authors argue that this represents a biologically plausible mechanism where the ever decreasing number of changes per time interval lead to reduced energy consumption. TODO insert image.
+\newpage
+
+Figure \ref{fig:mscn} shows how feature extraction in the multi-scale convolutional network is done.  The model parameters, $\theta$, is shared between all the networks.
+
+\subsection{Multi-column deep neural network}
+In \cite{ciresan} and \cite{ciresan2} a multi-column deep convolutional network (MCDNN) is used to improve the state-of-the-art on several classification tasks, the most famous of which are the MNIST and NORB dataset.  Traditional CNNs, with randomly initialized weights, are created and all of them trained either on the same training sets or distorted variants.  The final classification is done with a democratic vote between the CNNs, referred to as columns in the paper.
+
+Max pooling is used to create a winner-take-all effect where only the winner neurons receive training.  The authors argue that this represents a biologically plausible mechanism where the ever decreasing number of changes per time interval lead to reduced energy consumption.
 
 In order to speed up training the entire system is optimized to run on GPUs. The authors estimate that using GPUs leads to an increase in computational power of around 50-100x.  Furthermore, this additional processing power removes the need for pre-training completely.  The network is trained through no other means than an online version of backpropagation (weight updates after each training case).
 
-This system is the first one able to achieve human-competitive results on the MNIST dataset.  Humans typically reach error levels of 0.2\%, not much better than the 0.23\% achieved by MCDNN.
+This system is the first one able to achieve human-competitive results on the MNIST dataset.  Humans are reported to achieve error levels of 0.2\%, the MCDNN system manages 0.23\%
+
 
 \subsection{Convolutional Deep Belief Network}
 
@@ -411,31 +423,45 @@ The building blocks in the deep convolutional belief network is the convolutiona
 
 \begin{itemize}
  \item The hidden layer of the RBM is really two layers:
-   \item \begin{itemize}[(a)]
+   \begin{itemize}
            \item A \textit{detection layer} which performs convolution.
             \item A \textit{a pooling layer} which performs pooling.
           \end{itemize}
- \item The detection layer has $\mathbf{K}$ groups, made up of $\mathbf{N_H \times N_H}$ hidden units.  If we are detecting $\mathbf{K}$ features consisting of $\mathbf{N_W \times N_W}$ ``pixels''.
+ \item The detection layer has $\mathbf{K}$ groups, made up of $\mathbf{N_H \times N_H}$ hidden units.  And each group has a $\mathbf{N_W \times N_W}$ filter associated with that group.
  \item To sample from the visible units we use convolution instead of propagating the activation of the input layer.
 \end{itemize}
 
-Max-pooling was only intended for feed-forward architectures so a new variant called probabilistic max-pooling is used.  A regularization step is also used in order to force sparsity, because the model in the paper is overcomplete.
+Max-pooling was only intended for feed-forward architectures so a new variant called probabilistic max-pooling is used.  A regularization step is also used in order to force sparsity, because the model in the paper is overcomplete and does not generalize well without the regularization.
 
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=\textwidth]{mycdbn.png}
+  \caption{Depiction of a convolutional RBM with probabilistic max pooling.}
+  \label{fig:crbm}
+\end{figure}
+
+\newpage
+
+Figure \ref{fig:crbm} show a CRBM, where $\mathbf{W^k}$ is the k-th filter and $\mathbf{h^k_{i,j}}$ is a hidden unit in the k-th group.
 \section{Conclusion}
 
 Various types of deep neural networks are at the bleeding edge of many classification tasks.  There are many factors which make them attractive classifiers, but chief among them are perhaps:
 \begin{enumerate}
 \item The ability to train on raw data, avoiding the need for complex feature engineering.
 \item Scalability, combined with the ever-increasing availability of computational resources.
-\item The ability to tackle a diverse range of tasks without use of explicit domain knowledge.
+\item The ability to tackle a diverse range of tasks without relying on domain knowledge.
 \item Performance can be improved, greatly, by doing unsupervised training on readily available unlabeled data.
 \end{enumerate}
 
 We have focused on image processing, partly because we find this application most interesting, but also because the literature itself favors this task.  The reason for this favoritism is not only due to flights of fancy, but because certain mechanisms, like weight-sharing and max-pooling work very well when the input data is contiguous (e.g. as image data is, or a contiguous sound wave).  Another reason is that the imaging tasks represent real challenges due to both the size and high dimensionality of the input data, making the task a worthy research subject.
 
-The obvious value of any improvements to tasks like machine vision has lead to a situation where there is a lot more back and forth between academia and industry than was is usual for AI research.  Google is currently using deep belief networks to power their voice-to-text engine found in the Android operating system.  In \cite{ng} Andrew Ng teamed up with Google to run deep learning, on an object recognition task, using a cluster of 1000 machines for a total for 16000 cores.  The model has one billion connections.  Deep networks also powered Microsoft's recent demonstration of real-time translation of speech, where the speech was synthesized using a model of the speaker's own voice.  The net result was a presentation where the speaker spoke English and the audience hear the speaker speak Chinese, in his own voice.  The demonstration of this technology is well worth a \href{http://www.youtube.com/watch?v=Nu-nlQqFCKg}{look}.
+In general we can say that the neural networks encountered all excel, to various degrees, on tasks that humans are also good at.  This means they're good at tasks like voice recognition, speech-to-text and vision, but perform very poorly if we try to use them as a calculator.
 
-The short distance between theory and practice for this kind of technology, makes it especially interesting to work with.
+The obvious value of any improvements to tasks like machine vision has lead to a situation where there is a lot more back and forth between academia and industry than was is usual for AI research.  Google is currently using deep belief networks to power their voice-to-text engine found in the Android operating system.  In \cite{ng} Andrew Ng teamed up with Google to run deep learning, on an object recognition task, using a cluster of 1000 machines for a total for 16000 cores.  The model has one billion connections.
+
+Deep networks also powered Microsoft's recent demonstration of real-time translation of speech, where the speech was synthesized using a model of the speaker's own voice.  The net result was a presentation where the speaker spoke English and the audience heard the speaker speak Chinese, in his own voice.  The demonstration of this technology is well worth a \href{http://www.youtube.com/watch?v=Nu-nlQqFCKg}{look}.
+
+The short distance between theory and practice for this technology, makes it especially interesting to work with.
 
 \bibliographystyle{plain}
 \bibliography{references}
