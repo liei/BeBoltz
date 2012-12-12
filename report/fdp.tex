@@ -12,6 +12,7 @@
 \usepackage{verbatim}
 \usepackage{wrapfig}
 \usepackage{graphicx}
+\usepackage{hyperref}
 
 \newcommand{\bigstar}{\mathop{\Huge \mathlarger{\mathlarger{*}}}}
 
@@ -386,7 +387,7 @@ In \cite{farabet} a CNN is created which is scale invariant, for the purpose of 
 
 The importance of scale invariance, in regards to this task, is obvious: it is desirable for a ``small person'', i.e. a person in the background of the image, to be identified as a person even if the training set only contains images where the persons appear in the foreground.
 
-The problem of scale invariance can be solved by extending the concept of weight sharing over locations, to sharing weights over scales.  The weights are shared among different CNNs.  During classification the image is scaled--3 different sizes are used in the paper--and each version is sent to one CNN.  The output feature vector represents the concatenation of the feature vectors from the 3 CNNs.
+The problem of scale invariance can be solved by extending the concept of weight sharing over locations, to sharing weights over scales.  The weights are shared among different CNNs.  During classification the image is scaled--3 different sizes are used in the paper--and each version is sent to one CNN.  The final feature vector represents the concatenation of the feature vectors from the 3 CNNs.
 
 \subsection{Multi-column deep neural network}
 In \cite{ciresan} and \cite{ciresan2} a multi-column deep convolutional network (MCDNN) is used to improve the state-of-the-art on several classification tasks using e.g. the MNIST and NORB dataset.  Traditional CNNs, with randomly initialized weights, are initialized and all of them trained either one the same training sets or distorted variants.  The final classification is done with a democratic vote between the columns.
@@ -399,12 +400,26 @@ This system is the first one able to achieve human-competitive results on the MN
 
 \subsection{Convolutional Deep Belief Network}
 
-In \cite{lee} a convolutional deep belief network is created.\
+In \cite{lee} a convolutional deep belief network is created.  Recall that what separates a deep belief network from other kinds of deep networks is that it is a generative model, able to generate observable data.  There are several reasons that make the combination of convolutional and deep belief networks desirable:
+\begin{itemize}
+ \item The effect of training on unlabeled data is greater in belief networks.
+ \item The lack of mechanisms like weight-sharing and pooling for RBM based deep belief networks makes training on large input images computationally intractable in practice.
+ \item Deep belief networks are able to do inference both top down and bottom up, i.e. they are able to infer missing data.
+\end{itemize}
 
-TODO Write section.
+The building blocks in the deep convolutional belief network is the convolutional RBM (CRBM).  A CRBM is similar to a regular RBM, but with a few key differences:
 
-Uses a Convolutional RBM to make a generative Convolutional belief network.
-Uses probabilistic pooling to make the pooling generative.
+\begin{itemize}
+ \item The hidden layer of the RBM is really two layers:
+   \item \begin{itemize}[(a)]
+           \item A \textit{detection layer} which performs convolution.
+            \item A \textit{a pooling layer} which performs pooling.
+          \end{itemize}
+ \item The detection layer has $\mathbf{K}$ groups, made up of $\mathbf{N_H \times N_H}$ hidden units.  If we are detecting $\mathbf{K}$ features consisting of $\mathbf{N_W \times N_W}$ ``pixels''.
+ \item To sample from the visible units we use convolution instead of propagating the activation of the input layer.
+\end{itemize}
+
+Max-pooling was only intended for feed-forward architectures so a new variant called probabilistic max-pooling is used.  A regularization step is also used in order to force sparsity, because the model in the paper is overcomplete.
 
 \section{Conclusion}
 
@@ -418,7 +433,9 @@ Various types of deep neural networks are at the bleeding edge of many classific
 
 We have focused on image processing, partly because we find this application most interesting, but also because the literature itself favors this task.  The reason for this favoritism is not only due to flights of fancy, but because certain mechanisms, like weight-sharing and max-pooling work very well when the input data is contiguous (e.g. as image data is, or a contiguous sound wave).  Another reason is that the imaging tasks represent real challenges due to both the size and high dimensionality of the input data, making the task a worthy research subject.
 
-TODO this ending is a bit abrupt.  Perhaps write some shit about the back and forth between industry and academia.
+The obvious value of any improvements to tasks like machine vision has lead to a situation where there is a lot more back and forth between academia and industry than was is usual for AI research.  Google is currently using deep belief networks to power their voice-to-text engine found in the Android operating system.  In \cite{ng} Andrew Ng teamed up with Google to run deep learning, on an object recognition task, using a cluster of 1000 machines for a total for 16000 cores.  The model has one billion connections.  Deep networks also powered Microsoft's recent demonstration of real-time translation of speech, where the speech was synthesized using a model of the speaker's own voice.  The net result was a presentation where the speaker spoke English and the audience hear the speaker speak Chinese, in his own voice.  The demonstration of this technology is well worth a \href{http://www.youtube.com/watch?v=Nu-nlQqFCKg}{look}.
+
+The short distance between theory and practice for this kind of technology, makes it especially interesting to work with.
 
 \bibliographystyle{plain}
 \bibliography{references}
