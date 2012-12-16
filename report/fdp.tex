@@ -450,19 +450,21 @@ Figure \ref{fig:crbm} show a CRBM, where $\mathbf{W^k}$ is the k-th filter and $
 
 At the very beginning of the semester we wanted to ``implement an RBM, to get familiar with the terminology, and see if we could replicate the results on the MNIST dataset''.  Software engineers are notorious for being unable to estimate how long something is going to take, but our estimate of two weeks of effort, turned out to be several orders of magnitude too low.
 
-The main problem was that the source material we had on hand was entire unsatisfactory, given our background.  The only resources available were scientific papers and an implementation written in Python, where all the code was executed on the GPU.
+The main problem was that the source material we had on hand was entirely unsatisfactory, given our background.  The only resources available were scientific papers and an implementation written in Python, where all the code was executed on the GPU.
 
-There is little doubt that we could have implemented the system correctly if we could only understand all the math in the research papers on deep belief networks, or Boltzman machines, but these proofs are well out of our reach.  We had hoped that we could use these networks, and find interesting applications and get some cool results, without understand all the details of how and why they work.
+There is little doubt that we could have implemented the system correctly if we could only understand all the math in the research papers on deep belief networks, or Boltzman machines, but these proofs are well out of our reach.  We had hoped that we could use these networks, and find interesting applications and results, without understand all the details of how and why they work.
 
-At \href{http://deeplearning.net/tutorial}{deeplearning.net} there is a Python implementation of a DBN using stacked RBMs.  We thought we could reference this code base in order to get answers to any question we had after reading the research papers.  The problem we encountered were two-fold:
+At \href{http://deeplearning.net/tutorial}{deeplearning.net} there is a Python implementation of a DBN using stacked RBMs.  This code, and the tutorial itself, is maintained by Yoshua Bengio's group at the university of Montreal.  Bengio is one of the leading researcher in the field of deep learning.
 
-\begin{itemize}
+We thought we could reference this code base in order to get answers to any question we had after reading the research papers.  The problem we encountered were two-fold:
+
+\begin{enumerate}
  \item Python is a dynamically typed language.
  \item Python allows operator overloading.
  \item The implementation relies heavily on Theano, a library for running code on GPUs.
-\end{itemize}
+\end{enumerate}
 
-ANNs are typically implemented using operations on vector and matrices.  Point 1) and 2) meant that we often found ourselves in the following situation, when trying to read the code: is this a scalar, a vector, or a matrix?  In some cases scalar values were even aggregated into vectors just for performance reason (an operation could be performed in parallel on each element of the vector on the GPU).  3) meant we had to dive into, and decipher, code in the GPU library used in order to find out what was really going.
+ANNs are typically implemented using operations on vector and matrices.  Point 1) and 2) meant that we often found ourselves in the following situation, when trying to read the code: is this a scalar, a vector, or a matrix?  In some cases scalar values were even aggregated into vectors just for performance reason (an operation could then be performed in parallel on each element of the vector on the GPU).  3) meant we had to dive into, and decipher, code in the GPU library in order to find out what was really going on.
 
 This process was very time consuming, and often we realized, after some time, that we would probably never find the answer we were looking for.
 \subsection{Haskell}
@@ -472,33 +474,39 @@ One of the authors had been dabbling with Haskell, a pure, functional language f
  \item Haskell is very ``high level'', making it possible to get a lot done with few lines of code.
  \item Great performance.
  \item Easy to write highly parallel code, due to immutable data structures, and high quality abstractions for the parallellization of programs.
- \item Good libraries for matrix multiplication, relevant for implement common operations found in ANNs.
+ \item Good libraries for matrix multiplication, relevant for implementing common operations found in ANNs.
  \item CUDA/OpenCL bindings (making it possible to perform computations on GPUs).
 \end{enumerate}
 
-We knew we wanted, or at least would benefit greatly from, points 2), 3) and 5) because we wanted to work with large networks and large datasets.  While not unwarranted, these concerns were perhaps a bit premature.
+We knew we wanted, or at least would benefit greatly from, points 2), 3) and 5) because we wished to work with large networks and datasets.  While not unwarranted, these concerns were perhaps a bit premature.
 
-After two weeks time we ended up scrapping Haskell and going with Java.  Java might not be as sexy, but it's a tried and true platform capable of delivering on points 4) and 5), while not being entirely unsatisfactory in regards to points 2) and 3).  Haskell is a very complex language, and many of the abstractions found in the libraries are very complex as well.  We were learning a lot, and having a great time, but had to remind ourselves that his was an project intended for exploring AI, and not programming languages.  Getting everything re-implemented in Java took about two days.  The problem was never how much code we had to write, but what to write in the first place.
+After two weeks time we ended up abandoning Haskell and going with Java.  Java might not be as sexy, but it's a tried and true platform capable of delivering on points 4) and 5), while not being entirely unsatisfactory in regards to points 2) and 3).  Haskell is a very complex language, and many of the abstractions found in the libraries are very complex as well.  We were learning a lot, and having a great time, but had to remind ourselves that this was a project intended for exploring AI, and not programming languages.  Getting everything re-implemented in Java took about two days.  The problem was never how much code we had to write, but what to write in the first place.
+
+\subsection{What we implemented}
+
+We managed to implement an RBM, with all that entails (contrastive divergence, Gibbs sampling etc).  This RBM seems to work correctly.
+
+Some of the papers we read, including the deeplearning tutorial, had a softmax regression layer at the very top of the artificial neural network.  Softmax regression is a multivariate logistic regression method.  Plain logistic regression is used when the labels are mutually exclusive and binary.  With our usage of the MNIST dataset the use of softmax regression means that each example will only have one label, and the probabilities of all the labels will be normalized, so they sum to one.  Our implementation of softmax regression also seems to be correct.
+
+We have the mechanisms in place to stack however many RBMs we want, but we're not entirely sure if it is done correctly or not.
 
 \subsection{Results}
 
-We used the MNIST dataset for all the testing.  The MNIST dataset consist of 60 000 training cases, of handwritten digits, and 10 000 test cases.  This is a very large training set and we often used a subset of the dataset, instead of all of it, when we just wanted to debug the system.
+We used the MNIST dataset for all tests of the system.  The MNIST dataset consist of 60 000 training cases, of handwritten digits, and 10 000 test cases.  This is a very large training set and we often used a subset of the dataset, instead of all of it, when we just wanted to debug the system.
 
 All of the results described below are taken from memory, well after the fact, and represents nothing else than the results we obtained while working on implementing and improving the system.  These results do not represent ``good science'', but they were produced consistently by the system and they are all we have.
 
 \subsubsection{A single RBM}
 
-We managed to implement a single RBM, and train it using contrastive divergence on the MNIST dataset.  Training took around 2 minutes per epoch, per layer.  An epoch meaning training on all of the training cases. We initially trained on 10 epochs, but found we could get away with less. When the system was used for classification the best results were had when we only trained for 2 epochs.
+We managed to implement a single RBM, and train it using contrastive divergence on the MNIST dataset.  Training took around 2 minutes per epoch.  An epoch means training on all of the training cases. We initially trained for 10 epochs, but found we could get away with less. When the system was used for classification the best results were had when we only trained for 2 epochs.
 
-This very simple model managed an error rate consistently between 10-15\% on the full MNIST dataset, with 250 hidden nodes.
+This very simple model, with 250 hidden nodes, managed an error rate consistently between 10-15\% on the full MNIST dataset.
 
 \subsubsection{Stacked RBMs}
 
 The next step was to see what happened when we stacked two RBMs.  Our initial attempt achieved an error rate of 30\%.  We tried several configurations, the best result was achieved with 3 stacked RBMs and was just above 20\%.
 
 \subsubsection{Softmax Regression}
-
-Some of the papers were read, including the deeplearning tutorial, had a Softmax regression layer at the very top of the artificial neural network.  Softmax regression is just like linear regression, but it is used in situations where the categories are mutually exclusive.  In our case this meant that each example would only have one label, and the probabilities of all the labels would be normalized, so they summed to one.
 
 Softmax regression is full-blown learning algorithm in its own right and when we ran it on the full MNIST dataset we managed an error rate of 7.5\%.
 
@@ -515,7 +523,7 @@ Three RBMs & 20 \\            \hline
 Softmax regression & 7.5 \\   \hline
 RBM + Softmax & 6.5 \\        \hline
 \end{tabular}
-\caption{Results achieved during system implementation.}
+\caption{Results achieved during system implementation on the MNIST dataset.}
 \label{tbl:results}
 \end{table}
 % END RECEIVE ORGTBL results
@@ -532,15 +540,28 @@ RBM + Softmax & 6.5 \\        \hline
 
 \subsection{Discussion}
 
-The results are summarized in table \ref{tbl:results}.  We were very excited when we achieved, what we considered to be, such a low error rate on our first test, using only a single RBM.  Obviously, we were very disappointed, and confused, when the error rate went up as we added more layers.
+Our results are summarized in table \ref{tbl:results}.  We were very excited when we achieved, what we considered to be, such a low error rate on our first test, using only a single RBM.  Obviously, we were very disappointed, and confused, when the error rate went up as we added more layers.
 
-The idea of course is that each layer is going to present a better and better view of the data to the next layer, making its job easier.  The very last layer would have an easy job of classifying the training cases indeed.
+The idea, of course, is that each layer is going to present a better and better view of the data to the next layer, making its job easier.  The very last layer would have an easy job of classifying the training cases indeed.
 
-This is one of the major drawbacks of working in computer science: when something does not work as expected, is your approach wrong, or does the system simply contain a bug?  We spent endless amounts of time on code review--how do you even write unit or regression tests for something like this?--but never found any.
+This is one of the major drawbacks of working in computer science: when something does not work as expected, is your approach wrong, or does the system simply contain a bug?  We spent endless amounts of time on code review--how do you even write unit or regression tests for something like this? We never found any serious bugs.
 
-Instead we thought maybe we were lacking some critical feature. For instance Hinton, in\cite{hinton06}, makes use of something called a \textit{softmax group}.  A softmax group is a group of units, constrained so only one unit is active.  The softmax group is used to ensure that during training only one label unit is set during reconstruction.  When we tried to implement men this, the error rate equaled chance.  We were never able to figure out if our understanding was wrong, if there was a bug in the implementation, or if the components--picked from different papers and the deeplearning tutorial--simple weren't compatible.
+Instead we thought maybe we were lacking some critical feature. For instance Hinton, in\cite{hinton06}, makes use of something called a \textit{softmax group}.  A softmax group is a group of units, constrained so only one unit is active.  The softmax group is used to ensure that during training only one label unit is set during reconstruction.  When we tried to implement this, the error rate was no better than chance.  We were never able to figure out if our understanding was wrong, if there was a bug in the implementation, or if the components--picked from different papers and the deeplearning tutorial--simple weren't compatible.
 
-In \cite{hinton06} Hinton says, in his conclusion, that it isn't clear if \textit{fine-tuning} is needed at all, or if, perhaps, the computational resources are better spent training an ensemble of networks or on a larger training set.  This, and similar remarks, led us to believe that the greedy pre-training (contrastive divergence) was the be-all and end-all of training these networks, and that \textit{fine-tuning}, using for instance backpropagation, would only slightly decrease our error rate.  TODO
+In \cite{hinton06} Hinton says, in his conclusion, that it isn't clear if \textit{fine-tuning} is needed at all, or if, perhaps, the computational resources are better spent training an ensemble of networks, a larger network, or on a larger training set.  This, and similar remarks, led us to believe that the greedy pre-training (contrastive divergence) was the be-all and end-all of training these networks, and that \textit{fine-tuning}, using for instance backpropagation, would only slightly decrease our error rate.  As a consequence we spent a lot of time trying to find bugs in our implementation and understanding.
+
+In \cite{bengio07} the point is made that the result of pre-training is finding a promising area of the solution space, from which a gradient descent algorithm can find the optimal solution.  In \cite{ciresan} and \cite{ciresan2} a deep network is trained entirely without pre-training, with very impressive results.  The work done in \cite{ciresan}, and \cite{ciresan2}, is with convolutional networks--networks that are less complex, and thus perhaps more amenable to training without pre-training. Nevertheless, an interesting question is raised as to exactly how important pre-training is.
+
+When we decided to pull the plug, on the project, our plan was to run a few tests using backpropagation in order to determine the exact effect of pre-training.  Could we do without pre-training?  Perhaps the higher error rate seen when stacking multiple RBMs is normal, and something like backpropagation or another fine-tuning algorithm (like wake-sleep or up-down) is completely necessary for networks of those sizes.
+
+We also did not experiment enough with different network sizes.  We used, mostly, architectures very similar to what we'd seen in papers working with the MNIST dataset, but our network was not identical to any of them.  It is unlikely, but nonetheless possible, that we could have achieved better results by using a different network size.  The fact of the matter is that we felt, and still feel, that we don't understand deep belief networks deeply enough.  This led us to focus--perhaps more than we should have--on bug hunting in our system and understanding instead of on experimentation.
+
+\subsection{Concluding remarks}
+
+We are very disappointed with the results of our implementation efforts.  The state of the field is such that it's not clear, yet, exactly what works and what does not and which components fit where.  We found it very difficult to mix and match components and insights from different papers and then evaluate the results.  It was hard for us to say what was normal, and where more features would improve performance, and what was simply broken due to lack of understanding or bugs.
+
+\section{Future work}
+TODO
 
 \section{Conclusion}
 
