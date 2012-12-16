@@ -188,7 +188,85 @@ Although RBMs might be unable to efficiently represent some distributions that c
 
 The restricted Boltzman machine is so named because the energy metaphor is borrowed from physics.  In physics, the Boltzman distribution describes the fractional number of particles occupying a set of states with a given energy and temperature.  In our case, each input vector has a corresponding energy level.  During training this multi-dimensional energy landscape will be excavated to create ravines with clusters of training cases.  If the task is handwritten digit recognition then each digit class will map to a ravine in the energy landscape.  As in physics, the lower energy states are the most stable.
 
-An RBM is not limited to doing discrimination, it is a generative model.  This means that the trained model can show its user what it believes in.  Sampling from the model is done using a process called Gibbs sampling.  To perform Gibbs sampling we clamp an input on the visible layer, which activates the hidden layer.  The hidden layer activation is in turn used to activate the visible layer.  If we repeat this process sufficiently many times it will converge.  We can start the process off by sending in an instance of training data, e.g an example of a handwritten 9. This will seed the model in a favorable way and the process of Gibbs sampling will converge quicker.  In practice this means starting the model off inside the energy ravine containing known examples of other 9s and then having the model wander around until it settles on a state.  If we start the sampling process off with a random input vector, the process will take longer to converge and we are unable to affect which area of the energy landscape is explored to find a stable energy state.
+\subsection{RBM as a generative model}
+
+A generative model is a model capable of randomly generating observable data, often using some hidden parameters.  Generative models are different from discriminative models in the sense that all the variables are modeled--through what is called a full probabilistic models.  A discriminative model, on the other hand, provides only a model for the target variables given the observed variables.  This means we can generate values for any variables in the model, whereas a discriminative model would only allow us to study how the target variables for are affected by the various observed variables.  Some examples, other than RBMs, of generative models are:
+
+\begin{itemize}
+ \item Gaussian, and other types, of mixture models.
+ \item Hidden Markov Models
+ \item Naive Bayes
+\end{itemize}
+
+There are many benefits of working with a generative model as opposed to a discriminative ones:
+
+\begin{enumerate}
+\item Generative models can learn low-level features, through unsupervised training, and they are capable of learning more parameters without overfitting.  In the discriminative case each training case only provides as many bits of information as are required to specify the label\cite{hinton06}, whereas in the generative case, each training case constrains the parameters by as many bits of information as are required to specify the input.
+\item We can get insight into what the model has learned by sampling from the model.
+\end{enumerate}
+
+In terms of RBMs 2) means that the trained model can show its user what it believes in.
+
+\subsection{Sampling from an RBM}
+
+Sampling from the model is done using a process called Gibbs sampling.  Gibbs sampling is a Markov Chain Monte Carlo algorithm used to obtain random samples from the joint probability distribution of the model, when direct sampling is difficult.  We can use Gibbs sampling to get at the joint probability distribution of the model because we know the conditional distribution of each variable.
+
+Gibbs sampling generates an instance from the distribution of each variable, one after another, conditional on the values of the other variables.  This sequence of samples makes up a Markov chain and the stationary distribution of this Markov chain is the desired joint distribution.
+
+The conditional distribution of each variable is easy to get at because the hidden units are factorial--they are independent of one another, given the state of the visible units.
+
+To perform Gibbs sampling, in the RBM, we clamp an input on the visible layer, which activates the hidden layer.  The hidden layer activation is in turn used to activate the visible layer.  This step is called reconstruction.  If we repeat this process sufficiently many times it will converge.
+
+We can start the process off by sending in an instance of training data, e.g an example of a handwritten 9. This will seed the model in a favorable way and the process of Gibbs sampling will converge quicker.  In practice this means starting the model off inside the energy ravine containing known examples of other 9s and then having the model wander around until it settles on a state.  If we start the sampling process off with a random input vector, the process will take longer to converge and we are unable to affect which area of the energy landscape is explored to find a stable energy state.
+
+\begin{figure}[htb!]
+  \centering
+  \includegraphics[width=\textwidth]{gibbs.png}
+  \caption{Sampling from the model.}
+  \label{fig:sampling}
+\end{figure}
+
+Figure \ref{fig:sampling} shows how the sampling process works in an RBM.  The process is started off with a sample of the visible units (created randomly, or preferably from a training case) and this is used to infer the state of the hidden units.  The state of the hidden units is then, in turn, used to reconstruct the values of the visible units.  Eventually this process will converge to a stable energy state--which we can interpret as something the model \textit{believes} in.
+
+During sampling the individual activation probabilities are:
+
+\begin{equation}
+  \label{eq:h_state}
+   P(h_j=1|v) = \sigma(b_j + \sum_{i=1}^n w_{i,j} v_i)
+\end{equation}
+
+and
+
+\begin{equation}
+\label{eq:v_state}
+  P(v_i=1|h) = \sigma(a_i + \sum_{i=1}^m w_{i,j} h_j)
+\end{equation}
+
+Where $\sigma$ is a logistic sigmoid, \textit{v} denotes the visible layer and \textit{h} the hidden and $w_{i,j}$ is the weight matrix and $a_i$ and $b_i$ are biases.
+
+\subsection{Training an RBM}
+
+The learning rule for an RBM is:
+
+\begin{equation}
+\label{eq:training}
+  \Delta w_{ij} = \epsilon(\langle v_ih_j\rangle_{data} - \langle v_ih_j\rangle_{model})
+\end{equation}
+
+Where the angle brackets denote the expectations under the distribution specified by the subscript that follows.
+
+Because there are no connections between the hidden units, and between the visible units, in an RBM, it is very easy to get an unbiased sample of $\langle v_ih_j\rangle_{data}$.  As mentioned earlier this can be done with \ref{eq:h_state}, to get the state of the hidden units, and \ref{eq:v_state}, to get the state of the visible units.
+
+Getting an unbiased sample of $\langle v_ih_j\rangle_{model}$ is however much more difficult.  It can be done using Gibbs sampling, but it would require an infinite number of steps.
+
+The training algorithm \textit{constrastive divergence}, also called $CD_k$ where $\mathbf{k}$ is the number of steps used during Gibbs sampling, aims to solve this problem.  Contrastive divergence uses
+
+\begin{equation}
+\label{eq:cd}
+  \Delta w_{ij} = \epsilon(\langle v_ih_j\rangle_{data} - \langle v_ih_j\rangle_{reconstruction})
+\end{equation}
+
+to approximate \ref{eq:training}.  Normally $CD_1$ is used, for training, where a single step of gibbs sampling is used.  It has been shown that this works well enough in practice, even though it looks pretty crude\cite{hinton06}.
 
 \section{Autoencoders}
 
@@ -326,7 +404,17 @@ The first convolutional neural network (CNN) was described in Fukushima's semina
 
 \subsection{What is convolution}
 
-The term convolution is taken from the field of image processing.  In image processing, to convolve an image, with a filter (also called kernel), means to apply the filter to each pixel in the image.  A filter is created by defining weights of neighbor pixels to a center pixel.  The product of weights and pixel values are then summed to find the new value of the center pixel.  So, if our filter is a 3x3 identity matrix, the new value of the center pixel will be the sum of the pixel values of its south-east and north-west neighbor and the value of the center pixel itself.  A typical use-case for convolution in image processing is edge detection.
+The term convolution is taken from the field of image processing.  In image processing, to convolve an image, with a filter (also called kernel), means to apply the filter to each pixel in the image.  A filter is created by defining weights of neighbor pixels to a center pixel.
+
+An example can be seen in figure \ref{fig:convolution}.  Here the emboss kernel is used.  Using the emboss kernel the filtered image will represent the rate of color change at each location in the original image.  The emboss kernel only has non-zero elements on the main diagonal, and the center element is zero.  Thus, the value of the center pixel is $4 * 0 + 2 * -4 = -8$.
+\begin{figure}[htb!]
+  \centering
+  \includegraphics[width=\textwidth]{convolution.jpg}
+  \caption{Example of convolution using the emboss kernel.}
+  \label{fig:convolution}
+\end{figure}
+
+By using different filters, we can process the image to achieve various effects.  Some common filters used result in sharpening, blurring or edge detection.
 
 The use of convolution in ANNs is quite analogous: the filter is a feature detector. The sum, of products of pixel values and weights, is not used to create a new center pixel, but instead expresses the probability that the feature being detected is present at the given location in the picture.  Thus, the result of convolving an image with a filter is a matrix of probabilities, also called a feature map.  By convolving the image with many filters we can create several feature maps.  If we denote the k-th feature map at a given layer as $h^k$, which is determined by the weights $W^k$ and bias $b_k$ then the feature map $h^k$ is:
 
@@ -338,16 +426,18 @@ Where * means matrix convolution, and not multiplication, and $\sigma$ is some n
 
 \subsection{Pooling}
 
-Pooling is another important component of CNNs.  There are various types of pooling, but the most common ones are max and mean-pooling.  To perform max pooling the feature maps are partitioned into non-overlapping rectangles, and for each sub-region, the output is the maximum value.  In other words, how likely the feature is to be present somewhere in the sub-region.
+Pooling is another important component of CNNs.  Each unit in the pooling layer has a receptive field in the convolution layer below.  The role of the unit is to aggregate the values in its receptive field, in some meaningful way.  The feature maps created in the convolution layer is partitioned into non-overlapping rectangles, and for each sub-region, the pooling value is calculated.
 
-Max pooling serves two purposes:
+There are various types of pooling, but the most common ones are max and mean pooling.  For max pooling the output is simply the maximum value in the receptive field.  And for mean-pooling it is the mean value of all the units in the receptive field.
+
+Pooling serves two purposes:
 
 \begin{enumerate}
 \item Reduction of computational complexity, for upper layers of the network.
 \item Provide translational and deformational invariance.
 \end{enumerate}
 
-Since max pooling provides increased robustness, in terms of the position of features within an image, it has proven to be a good way of reducing the dimensionality of the intermediary representations.
+Since pooling provides increased robustness, in terms of the position of features within an image, it has proven to be a good way of reducing the dimensionality of the intermediary representations.
 
 If we refer back to the work done by Hubel and Wiesel the convolution step used for feature extraction corresponds to the work done by the \textit{simple cells} and the pooling operation to the work done by the \textit{complex cells} found in the visual area V1.
 
@@ -358,7 +448,7 @@ If we refer back to the work done by Hubel and Wiesel the convolution step used 
   \label{fig:mylenet}
 \end{figure}
 
-In figure \ref{fig:mylenet} we get a descriptive view of how a CNN works.  In layer $\mathbf{S1}$ we can see 4 feature maps, describing the probabilities that 4 different features are present at various locations of the image.  $\mathbf{C1}$ is a sub-sampling layer performing pooling.  $\mathbf{C1}$ then feeds into $\mathbf{S2}$ which creates new feature maps based on more abstract features.  At the very top of the network, in LeNet, we find a fully connected multi-layer perceptron (MLP) with logistic regression.
+In figure \ref{fig:mylenet} we get a descriptive view of how a CNN works, with alternating convolution and sub-sampling (max-pooling) layers.  In layer $\mathbf{S1}$ we can see 4 feature maps, describing the probabilities that 4 different features are present at various locations of the image.  $\mathbf{C1}$ is a sub-sampling layer performing pooling.  $\mathbf{C1}$ then feeds into $\mathbf{S2}$ which creates new feature maps based on more abstract features.  At the very top of the network, in LeNet, we find a fully connected multi-layer perceptron (MLP) with logistic regression.
 
 In figure \ref{fig:mylenet} we can also see how the receptive field of each detector increases in size as we move toward the to of the network.  For instance if the first convolutional layer uses filters with receptive fields which are 4x4 in size, representing the receptive field of \textit{simple cells}.  The max pooling layer might look at say a 3x3 region of the resultant feature map, and in terms of the original image, each \textit{complex cell} would then have receptive field of size $(4 + 3 - 1)^2$ pixels from the input image, or $(rank(\mathbf{S1}) + rank(\mathbf{C1}) - 1)^2$.  Where $rank(A) = n\ \Leftrightarrow$ A is an $N\times N$ matrix.
 
@@ -397,8 +487,6 @@ The problem of scale invariance can be solved by extending the concept of weight
   \caption{Depiction of generation of feature vector for various scales.}
   \label{fig:mscn}
 \end{figure}
-
-\newpage
 
 Figure \ref{fig:mscn} shows how feature extraction in the multi-scale convolutional network is done.  The model parameters, $\theta$, is shared between all the networks.
 
@@ -502,6 +590,15 @@ We managed to implement a single RBM, and train it using contrastive divergence 
 
 This very simple model, with 250 hidden nodes, managed an error rate consistently between 10-15\% on the full MNIST dataset.
 
+\begin{figure}[htb!]
+  \centering
+  \includegraphics[width=\textwidth]{filters.png}
+  \caption{A view of the filters in our RBM.  The filters represent various feature detectors.}
+  \label{fig:filters}
+\end{figure}
+
+Figure \ref{fig:filters} shows the filters of the RBM.  These feature detectors give a pretty clear indication that the RBM we implemented is doing work related to handwritten digit recognition.  Each filter is created by making an image out of all the weights connecting all the input nodes (784, in these 28x28 images) to one hidden unit, and then scaling the values to represent them as a grey scale image.
+
 \subsubsection{Stacked RBMs}
 
 The next step was to see what happened when we stacked two RBMs.  Our initial attempt achieved an error rate of 30\%.  We tried several configurations, the best result was achieved with 3 stacked RBMs and was just above 20\%.
@@ -561,7 +658,45 @@ We also did not experiment enough with different network sizes.  We used, mostly
 We are very disappointed with the results of our implementation efforts.  The state of the field is such that it's not clear, yet, exactly what works and what does not and which components fit where.  We found it very difficult to mix and match components and insights from different papers and then evaluate the results.  It was hard for us to say what was normal, and where more features would improve performance, and what was simply broken due to lack of understanding or bugs.
 
 \section{Future work}
-TODO
+
+In \cite{farabet} the task of scene labeling is tackled.  Scene labeling in itself is a difficult task, but it is further complicated by the difficulty of creating good datasets.
+
+In order to create such a dataset one has to send a human out into the world to take pictures.  These pictures then have to be processed--correctly segmented and labeled--by humans.  Often this is done through services like Amazon's Mechanical Turk, an out-sourcing service where you can pay humans to solve repetitive tasks.  Needless to say this entire process is costly, in terms of time and money.
+
+One of the characteristics of all the deep networks we have encountered is their ability to sponge up training data.  We've seen time and again how the error rate decreases monotonically with the size of the training set.  This has resulted in various strategies to use existing training data to manufacture more.  Most of these strategies boil down to applying various transformations to the training data, e.g. slight deformation, rotation, etc.
+
+It is our hope that we can solve the tension existing between the desire for vast and tailor-made datasets and the costly nature of procuring them.
+
+We want to see if we can use modern graphic engines to generate training data for use in machine vision.  Specifically we want to investigate if we can use data generated from a virtual world to:
+
+\begin{enumerate}
+ \item Replace training data generated from the real world entirely.  Using these datasets only for testing.
+ \item Augment training data from the real world.
+\end{enumerate}
+
+We think 2) is doable, and are hoping for 1).  If it's not possible now, Moore's law basically guarantees that it will be possible in the near future.
+
+In terms of the scene labeling task the datasets generated from the virtual world have a few interesting properties:
+
+\begin{itemize}
+ \item We can easily change the time of day to generate images under different lighting conditions.
+ \item We can easily change the weather.
+ \item The number of labels we can use is only limited by the amount of art assets available.
+ \item It is much easier to create hierarchical labels, expressing relations like is-part-of.
+ \item We can generate endless amounts at very low cost.
+ \item We can generate images that might not be possible to get in the real world.
+ \item Its easy to generate datasets for different user-agents.  The different user agents will have their viewpoint at different elevations and pitch (e.g the viewpoint of the navigation system of a car vs a drone).
+\end{itemize}
+
+
+\begin{figure}[htb!]
+  \centering
+  \includegraphics[width=\textwidth]{myce3ss.jpg}
+  \caption{A screen capture of art assets rendered using the graphics engine CryEngine 3.}
+  \label{fig:cryEngine}
+\end{figure}
+
+As can be seen in figure \ref{fig:cryEngine} the state of the art in computer graphics is quite impressive. It's not hard to imagine how machine vision systems can benefit from training on such images.
 
 \section{Conclusion}
 
