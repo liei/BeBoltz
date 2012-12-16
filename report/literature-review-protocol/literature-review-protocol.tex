@@ -1,0 +1,118 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{verbatim}
+\usepackage{subfig}
+\usepackage{makeidx}
+\usepackage{listings}
+\usepackage{color}
+
+\title{Literature review protocol}
+\author{Lars Andersen \and Tormund S. Haus}
+\date{\today}
+\begin{document}
+\maketitle
+\newpage
+
+\section{Structured Literature Review}
+
+The purpose of this document is to aid us in performing a literature review.  The goal of a structured literature review is to document the process used in obtaining, and selecting, the works of the giants on which shoulders we must stand.
+
+\section{Background}
+
+We are fascinated with the work Hinton et al. is doing with Restricted Boltzman Machines and the work of LeCun et al. and Andrew Ng et al. with convolutional networks.  The common thread in the research we're interesting in is that all of it involves deep artificial neural networks.
+
+This is the second version of this document.  The first version was written in preparation of implementing a DBN.  The second major version was written when it was decided to take a broader look at the literature involving deep networks in general.  This has the unfortunate consequence of making this document look rather \textit{unstructured}.  Thankfully, the two phases of literature search were related, mitigating some of damage.
+
+\section{Research Questions}
+
+\begin{itemize}
+ \item RQ1: What is a DBN?
+ \item RQ2: How do DBNs work?
+ \item RQ3: How can we construct a DBN?
+ \item RQ4: What kind of problems do deep networks excel at?
+ \item RQ5: What other kinds of deep neural networks exist?
+ \item RQ6: How are the other neural networks different from DBNs?
+ \item RQ7: What is a convolutional neural network?
+\end{itemize}
+
+RQ7 was added based on the papers found investigating RQ6.
+
+\section{Search Process}
+
+\subsection{Sources}
+
+In the earlier version of this document we took a ``more is better'' approach to sources, but quickly found that the opposite was true.  It took a lot of time to search the different sources and we were rarely rewarded for our troubles.  This lead us to revise our protocol to focus on a few key sources.
+
+\begin{itemize}
+ \item IEEE Xplore
+ \item CiteSeer
+ \item SpringerLink
+ \item Google Scholar
+ \item The home pages of key players like:
+   \begin{itemize}
+   \item Geoffrey Hinton
+   \item Andrew Ng
+   \item Yann LeCun
+   \end{itemize}
+\end{itemize}
+
+\subsection{Search Terms}
+
+% BEGIN RECEIVE ORGTBL terms
+\begin{table}[htb!]
+\begin{tabular}{|l|l|l|l|}\hline
+Group 1 & Group 2 & Group 3 & Group 4 \\ \hline
+Deep & Artificial Neural Network & Belief Network & Boltzman Machine \\ \hline
+ & ANN & Belief & Contrastive Divergence \\ \hline
+ & Neural Network &  & Convolutional Network \\ \hline
+ & Multi-layer perceptron &  & Deep learning \\\hline
+ & MLP &  &  \\ \hline
+ \end{tabular}
+ \caption{Search terms}
+ \label{tbl:terms}
+\end{table}
+% END RECEIVE ORGTBL terms
+\begin{comment}
+#+ORGTBL: SEND terms orgtbl-to-latex :splice nil :skip 0
+| Group 1 | Group 2                   | Group 3        | Group 4                |
+| Deep    | Artificial Neural Network | Belief Network | Boltzman Machine       |
+|         | ANN                       | Belief         | Contrastive Divergence |
+|         | Neural Network            |                | Convolutional Network  |
+|         | Multi-layer perceptron    |                | Deep learning          |
+|         | MLP                       |                |                        |
+\end{comment}
+
+The search terms we used to get at our research questions are shown in table \ref{tbl:terms}.  A search string is created by combining the search term from group 1 with a term from group 2 and/or group 3, or by using terms from group 4 on their own.
+
+\newpage
+\section{Study Selection Process}
+
+Using these search terms we are likely to uncover far more papers than we are willing to read.  To filter the papers we are using the following criteria:
+
+\subsection{Study Inclusion Criteria}
+
+Both inclusion criteria (IC) are mandatory.
+
+\begin{itemize}
+ \item IC1: The study's main concern is deep artificial neural networks.
+ \item IC2: The network is evaluated on machine vision tasks.
+\end{itemize}
+
+\subsection{Study Quality Criteria}
+
+The following quality criteria (QC) were used to evaluate the papers.  A hit on each QC gave the paper an additional point.  Papers with higher scores were given priority; we did not set a predefined cap i.e. to only read papers with a score above $\mathbf{x}$.
+
+\begin{itemize}
+ \item The study includes empirical results.
+ \item The datasets used are well-known.
+ \item The study is placed in a proper context of other studies.
+ \item The system used is thoroughly explained.
+ \item The procedures used are thoroughly explained.
+ \item The results are good, or \textit{interesting}, for some interpretation of \textit{interesting}.
+ \item The study includes details relevant to implementing a DBN.
+   \begin{itemize}
+   \item The study has pseudocode.
+   \end{itemize}
+\end{itemize}
+
+\end{document}

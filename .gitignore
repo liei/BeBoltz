@@ -11,3 +11,4 @@
 *.blg
 *.synctex.gz
 /images
+*.out

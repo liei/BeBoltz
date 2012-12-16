@@ -12,6 +12,7 @@
 \usepackage{verbatim}
 \usepackage{wrapfig}
 \usepackage{graphicx}
+\usepackage{hyperref}
 
 \newcommand{\bigstar}{\mathop{\Huge \mathlarger{\mathlarger{*}}}}
 
@@ -63,7 +64,7 @@ Tormund S. Haus}
 \clearpage
 \section{Introduction}
 
-This report details the work done this semester in the specialization project.  The goal of the project was to investigate deep belief networks. Specifically, to implement a deep belief network (DBN), using restricted Boltzman machines (RBM) as building blocks.  Implementing these networks, based on scientific papers, proved to be a much larger challenge than expected.  Instead of writing about a failed implementation attempt, with entirely uninteresting results, this report will be a state of the art, where we take a look at some of the interesting technologies we've encountered throughout this semester.  At the beginning of the semester we had decided that these networks were interesting enough, in our eyes, that we wanted to work with them for a full year.  Thus, another goal of the project was to figure out what tasks these networks excel at, and where they come up short.  We then planned to use that knowledge to find a suitable project for the upcoming master thesis.
+This report details the work done this semester in the specialization project.  The goal of the project was to investigate deep belief networks. Specifically, to implement a deep belief network (DBN), using restricted Boltzman machines (RBM) as building blocks.  Implementing these networks, based on scientific papers, proved to be a much larger challenge than expected.  Instead of writing exclusively about a failed implementation attempt, we're also writing up a review of some of the interesting technologies we encountered during the semester.  At the beginning of the semester we had decided that these networks were interesting enough, in our eyes, that we wanted to work with them for a full year.  Thus, another goal of the project was to figure out what tasks these networks excel at, and where they come up short.  We then planned to use that knowledge to find a suitable project for the upcoming master thesis.
 
 \section{Artificial Neural Networks}
 
@@ -137,8 +138,8 @@ There are several ways to train an ANN, but the most common is to use an algorit
 Backpropagation can take a long time to converge to a solution, which may be a local optima and not a global one.  The computational complexity of backpropagation means that it can get prohibitively expensive to train large networks.  ANNs also typically grow in width rather than depth, when the model increases in complexity.  The reason for this is twofold:
 
 \begin{enumerate}
-\item Adding a new layer, of same size, adds a lot more connections.  In a fully connected, feed-forward, network adding another layer of N nodes will create an additional $N^2$ connections, whereas adding another node only adds $N$ new connections.
-\item It is hard to meaningfully propagate an error signal through a very deep network.  If the weights are very small the gradient will be tiny at the start of the network.  If the weights are large, the gradients might be more reasonable, but we are likely to get stuck in a local minima of a highly multimodal landscape.
+ \item Adding a new layer, of same size, adds a lot more connections.  In a fully connected, feed-forward, network adding another layer of N nodes will create an additional $N^2$ connections, whereas adding another node only adds $N$ new connections.
+ \item It is hard to meaningfully propagate an error signal through a very deep network.  If the weights are very small the gradient will be tiny at the start of the network.  If the weights are large, the gradients might be more reasonable, but we are likely to get stuck in a local minima of a highly multimodal landscape.
 \end{enumerate}
 
 In \cite{bengio09} Bengio makes a convincing case for why deep architectures are preferable to shallow ones.  The key point being that shallow networks are unable to efficiently encode certain functions.  These function are what the author calls \textit{highly varying functions}: functions where a piecewise-linear approximation of the function would require a large number of pieces.  In general this puts traditional ANNs at a disadvantage, and particularly so the ones being trained only with backpropagation.
@@ -187,7 +188,7 @@ Although RBMs might be unable to efficiently represent some distributions that c
 
 The restricted Boltzman machine is so named because the energy metaphor is borrowed from physics.  In physics, the Boltzman distribution describes the fractional number of particles occupying a set of states with a given energy and temperature.  In our case, each input vector has a corresponding energy level.  During training this multi-dimensional energy landscape will be excavated to create ravines with clusters of training cases.  If the task is handwritten digit recognition then each digit class will map to a ravine in the energy landscape.  As in physics, the lower energy states are the most stable.
 
-An RBM is not limited to doing discrimination, it is a generative model.  This means that the trained model can show its user what it believes in.  Sampling from the model is done using a process called Gibbs sampling.  To perform Gibbs sampling we clamp an input on the visible layer, which activates the hidden layer.  The hidden layer activation is in turn used to activate the visible layer.  If we repeat this process sufficiently many times it will converge.  We can start the process off by sending in an instance of training data, e.g an example of a handwritten 9, this will seed the model in a favorable way and the process of Gibbs sampling will converge quicker.  In practice this means starting the model off inside the energy ravine containing known examples of other 9s and then having the model wander around until it settles on a state.  If we start the sampling process off with a random input vector, the process will take longer to converge and we are unable to affect which area of the energy landscape is explored to find a stable energy state.
+An RBM is not limited to doing discrimination, it is a generative model.  This means that the trained model can show its user what it believes in.  Sampling from the model is done using a process called Gibbs sampling.  To perform Gibbs sampling we clamp an input on the visible layer, which activates the hidden layer.  The hidden layer activation is in turn used to activate the visible layer.  If we repeat this process sufficiently many times it will converge.  We can start the process off by sending in an instance of training data, e.g an example of a handwritten 9. This will seed the model in a favorable way and the process of Gibbs sampling will converge quicker.  In practice this means starting the model off inside the energy ravine containing known examples of other 9s and then having the model wander around until it settles on a state.  If we start the sampling process off with a random input vector, the process will take longer to converge and we are unable to affect which area of the energy landscape is explored to find a stable energy state.
 
 \section{Autoencoders}
 
@@ -198,7 +199,7 @@ The latent representation $\mathbf{y}$, or \textit{code}, is then mapped back--t
 
 Optionally we can let $\mathbf{W'} = \mathbf{W}^T$.  Using this constraint we say that the weights are \textit{tied}.  This same terminology is used for RBMs as well and in that context it means that we are using the same weights for discrimination and generation.
 
-The parameters of the autoencoder $W, b and b'$ are optimized such that the average reconstruction error is minimized.  One way to do this would be to use the \textit{squared error} to guide the weight changes.
+The parameters of the autoencoder $\mathbf{W}$, $\mathbf{b}$ and $\mathbf{b'}$ are optimized such that the average reconstruction error is minimized.  One way to do this would be to use the \textit{squared error} to guide the weight changes.
 
 \begin{figure}[htb]
   \centering
@@ -283,7 +284,7 @@ The parameters of the autoencoder $W, b and b'$ are optimized such that the aver
   \label{fig:ae}
 \end{figure}
 
-The gist of it all is that the autoencoder does its best to replicate the input.  The autoencoder drawn in \ref{fig:ae} is perhaps the most common type, where the layer(s) between the input and output layer has a lower dimension.  This will force the autoencoder to learn a compressed representation of the input vector, which it then uses to create the output.  Intuitively, one would think that if the intermediary representation was of the same, or higher dimension, the autoencoder would simply learn the identity function.  Bengio et al. tackled this question in \cite{bengio07} and found that autoencoders with non-decreasing layer sizes also generalize well.  They do, however, speculate that this might be explained by their use of stochastic gradient decent and weight decay.  In other words in the general case, we might risk learning the identity function.
+The gist of it all is that the autoencoder does its best to replicate the input.  The autoencoder shown in \ref{fig:ae} is perhaps the most common type, where the layer(s) between the input and output layer has a lower dimension.  This will force the autoencoder to learn a compressed representation of the input vector, which it then uses to create the output.  Intuitively, one would think that if the intermediary representation was of the same, or higher dimension, the autoencoder would simply learn the identity function.  Bengio et al. tackled this question in \cite{bengio07} and found that autoencoders with non-decreasing layer sizes also generalize well.  They do, however, speculate that this might be explained by their use of stochastic gradient decent and weight decay.  In other words in the general case, we might risk learning the identity function.
 
 A final point about autoencoders is worth mentioning: if the autoencoder is built using only linear hidden units, i.e $\mathbf{s}$ is picked from the family of linear functions, then training the autoencoder is equivalent to performing principal component analysis (PCA).
 
@@ -303,7 +304,7 @@ The motivation behind the denoising autoencoder is to attempt to answer the ques
 
 A deep belief network (DBN) can be created by stacking multiple RBMs.  When the input vector is processed by the first RBM its output is a new representation of the data.  This new representation can then be used as input to the RBM in the layer above.  The hope is that each RBM is better able to represent the data, by creating useful abstractions or simply removing noise.  In \cite{hinton06} Hinton shows that adding more layers in a DBN will always improve the model.  The use of the \textit{contrastive divergence} learning algorithm voids this guarantee, but it increases our confidence in the method to know that we can always improve the model by being patient enough in training each layer.
 
-The way to train a DBN is to use a greedy layer-wise training algorithm.  Each layer, consisting of one RBM, is trained before we move on to train the next one.  By freezing the weights after we're done training each RBM we miss out on any positive effect that might be had by the coordinated tuning of weights in two, or more, adjacent layers.  One way to overcome this inefficiency of the greedy training approach is to fine-tune the network after the greedy training phase is done.  Fine-tuning can be done using the well-known backpropagation algorithm, or some other algorithm for gradient decent.  By seeding the backpropagation algorithm with a promising state the following problems encountered using backpropagation in deep networks are solved\cite{hinton06reducing}:
+The way to train a DBN is to use a greedy layer-wise training algorithm.  Each layer, consisting of one RBM, is trained before we move on to train the next one.  By freezing the weights after we're done training each RBM we miss out on any positive effect that might be had by the coordinated tuning of weights in two, or more, adjacent layers.  One way to overcome this inefficiency of the greedy training approach is to fine-tune the network after the greedy training phase is done.  Fine-tuning can be done using the well-known backpropagation algorithm, or some other algorithm for gradient decent.  By seeding the backpropagation algorithm with a promising state (through pre-training) the following problems encountered using backpropagation in deep networks are solved\cite{hinton06reducing}:
 \begin{enumerate}
 \item If the initial weights are small the gradients in the earlier layers will be tiny and weight changes ineffectual.
 \item If the initial weights are large the network typically gets stuck in poor local minima.
@@ -313,9 +314,11 @@ When the initial weights are just right, gradient decent works quite well.
 
 \subsection{Using autoencoders}
 
-A deep belief network can also be created by stacking multiple (denoising) autoencoders.  The process is entirely analogous to the situation with RBMs.  First the network is trained unsupervised pre-training and then fine-tuned using an algorithm like backpropagation.  In \cite{bengio07} DBNs using stacked denoising autoencoders were found to perform as good, or better, than DBN networks of stacked RBMs, on the MNIST dataset.
+A deep belief network can also be created by stacking multiple (denoising) autoencoders.  The process is entirely analogous to the situation with RBMs.  First the network is trained using unsupervised pre-training and then fine-tuned using an algorithm like backpropagation.  In \cite{bengio07} DBNs using stacked denoising autoencoders were found to perform as good, or better, than DBN networks of stacked RBMs, on the MNIST dataset.
 
-Another related type of network can be found in \cite{hinton06reducing}.  In this paper, which is about dimensionality reduction of data using ANNs, a three RBMs of dimensions 2000-1000, 1000-500 and 500-30 are trained using a greedy unsupervised approach, as discussed earlier.  The weights are then \textit{unrolled} to create a new network of structure 2000-1000-500-30-500-1000-2000, which is then fine-tuned using backpropagation.  This network is itself an autoencoder and is referred to as a \textit{deep autoencoder}.
+\subsection{As an autoencoder}
+
+Another related type of network can be found in \cite{hinton06reducing}.  In this paper, which is about dimensionality reduction of data using ANNs, three RBMs of dimensions 2000-1000, 1000-500 and 500-30 are trained using a greedy unsupervised approach, as discussed earlier.  The weights are then \textit{unrolled} to create a new network of structure 2000-1000-500-30-500-1000-2000, which is then fine-tuned using backpropagation.  This network is itself an autoencoder and is referred to as a \textit{deep autoencoder}.
 
 \section{Convolutional Neural Networks}
 
@@ -323,9 +326,9 @@ The first convolutional neural network (CNN) was described in Fukushima's semina
 
 \subsection{What is convolution}
 
-The term convolution is taken from the field of image processing.  In image processing, to convolve an image, with a filter (also called kernel), means to apply the filter to each pixel in the image.  A filter is created by defining weights of neighbor pixels to a center pixel.  The product of weights and pixel values are then summed to find the new value of the center pixel.  So, if our filter is a 3x3 identity matrix, the new value of the center pixel will be the sum of the pixel values of its south-east and north-west neighbor.  A typical use-case for convolution in image processing is edge detection.
+The term convolution is taken from the field of image processing.  In image processing, to convolve an image, with a filter (also called kernel), means to apply the filter to each pixel in the image.  A filter is created by defining weights of neighbor pixels to a center pixel.  The product of weights and pixel values are then summed to find the new value of the center pixel.  So, if our filter is a 3x3 identity matrix, the new value of the center pixel will be the sum of the pixel values of its south-east and north-west neighbor and the value of the center pixel itself.  A typical use-case for convolution in image processing is edge detection.
 
-The use of convolution in ANNs is quite analogous: the filter is a feature detector. The sum, of products of pixel values and weights, is not used to create a new center pixel, but instead expresses the probability that the feature being detected is present at the given location in the picture.  Thus, the result of convolving an image with a filter is a matrix of probabilities, a feature map if you will.  By convolving the image with many filters we can create several feature maps.  If we denote the k-th feature map at a given layer as $h^k$, which is determined by the weights $W^k$ and bias $b_k$ then the feature map $h^k$ is:
+The use of convolution in ANNs is quite analogous: the filter is a feature detector. The sum, of products of pixel values and weights, is not used to create a new center pixel, but instead expresses the probability that the feature being detected is present at the given location in the picture.  Thus, the result of convolving an image with a filter is a matrix of probabilities, also called a feature map.  By convolving the image with many filters we can create several feature maps.  If we denote the k-th feature map at a given layer as $h^k$, which is determined by the weights $W^k$ and bias $b_k$ then the feature map $h^k$ is:
 
 \begin{displaymath}
   h^{k}_{ij} = \sigma((W^k * x))_{ij} + b_k
@@ -335,7 +338,7 @@ Where * means matrix convolution, and not multiplication, and $\sigma$ is some n
 
 \subsection{Pooling}
 
-Pooling is another important key component of CNNs.  There are various types of pooling, but the most common ones are max and mean-pooling.  To perform max pooling the feature maps are partitioned into non-overlapping rectangles, and for each sub-region, the output is the maximum value.  In other words, how likely the feature is to be present in the sub-region.
+Pooling is another important component of CNNs.  There are various types of pooling, but the most common ones are max and mean-pooling.  To perform max pooling the feature maps are partitioned into non-overlapping rectangles, and for each sub-region, the output is the maximum value.  In other words, how likely the feature is to be present somewhere in the sub-region.
 
 Max pooling serves two purposes:
 
@@ -355,56 +358,189 @@ If we refer back to the work done by Hubel and Wiesel the convolution step used 
   \label{fig:mylenet}
 \end{figure}
 
-In figure \ref{fig:mylenet} we get a descriptive view of how a CNN works.  In layer $\mathbf{S1}$ we can see 4 feature maps, describing the probabilities that 4 different features are present at various locations of the image.  $C1$ is a sub-sampling layer, where the sub-sampling operator is max pooling.  $\mathbf{C1}$ then feeds into $\mathbf{S2}$ which creates new feature maps based on more abstract features.  At the very top of the network, in LeNet, we find a fully connected multi-layer perceptron (MLP) with logistic regression.
+In figure \ref{fig:mylenet} we get a descriptive view of how a CNN works.  In layer $\mathbf{S1}$ we can see 4 feature maps, describing the probabilities that 4 different features are present at various locations of the image.  $\mathbf{C1}$ is a sub-sampling layer performing pooling.  $\mathbf{C1}$ then feeds into $\mathbf{S2}$ which creates new feature maps based on more abstract features.  At the very top of the network, in LeNet, we find a fully connected multi-layer perceptron (MLP) with logistic regression.
 
-In figure \ref{fig:mylenet} we can also see how the receptive field of each detector increases in size as we move toward the to of the network.  The first convolutional layer uses filters with receptive fields which are say 4x4 in size, the receptive field of \textit{simple cells}.  The max pooling layer then looks at say a 3x3 region of the feature map and in terms of the original image each \textit{complex cell} has a receptive field of $(4 + 3 - 1)^2$ pixels of the input image, or $(rank(\mathbf{S1}) + rank(\mathbf{C1}) - 1)^2$.  Where $rank(A) = n\ \Leftrightarrow$ A is an $N\times N$ matrix.
+In figure \ref{fig:mylenet} we can also see how the receptive field of each detector increases in size as we move toward the to of the network.  For instance if the first convolutional layer uses filters with receptive fields which are 4x4 in size, representing the receptive field of \textit{simple cells}.  The max pooling layer might look at say a 3x3 region of the resultant feature map, and in terms of the original image, each \textit{complex cell} would then have receptive field of size $(4 + 3 - 1)^2$ pixels from the input image, or $(rank(\mathbf{S1}) + rank(\mathbf{C1}) - 1)^2$.  Where $rank(A) = n\ \Leftrightarrow$ A is an $N\times N$ matrix.
 
 \subsection{Use of convolutional neural networks}
 
-For a long time, the only viable option for creating deep artificial neural networks was to build a convolutional network.  Deep fully connected networks trained using backpropagation were computationally intractable, but the CNNs were not.  There are several reasons for this:
+For a long time (until Hinton published \cite{hinton06} in 2006) the only viable option for creating deep artificial neural networks was to use a convolutional network.  Deep fully connected networks trained using backpropagation were computationally intractable, but the CNNs were not.  There are several reasons for this:
 
 \begin{enumerate}
-\item The filters are small.  It is therefore not very computationally intensive to find the correct weights used to detect a feature.
-\item The complexity of the network can be controlled by choosing how many features to use at each level.
-\item The sub-sampling layers do not need training at all.
-\item The sub-sampling layers provide a reduction in dimensionality, decreasing the computational load.
-\item Shared weights, in the filters, provide a lot of bang for the buck.
+ \item The filters are small.  It is therefore not very computationally intensive to find the correct weights used to detect a feature.
+ \item The complexity of the network can be controlled by choosing how many features to use at each level.
+ \item The sub-sampling layers do not need training at all.
+ \item The sub-sampling layers provide a reduction in dimensionality, decreasing the computational load.
+ \item Shared weights reduces duplication of knowledge throughout the network.
 \end{enumerate}
 
 The ideas used in convolutional networks are sound, so they have not fallen out of favor.  On the contrary, they are very scalable and produce state-of-the-art results.  There are several ways to put any additional computational power to good use:
 \begin{itemize}
-\item Detect more features.
-\item Adjust the size of the filters.  Smaller filters are more computationally intensive, but afford a higher level of detail.
-\item Add more layers.
+ \item Detect more features.
+ \item Adjust the size of the filters.  Smaller filters are more computationally intensive, but afford a higher level of detail.
+ \item Add more layers.
 \end{itemize}
 
 CNNs are primarily used in machine vision, because the statistics of the image is the same everywhere (a given feature is equally likely to appear anywhere in the input image) making translational invariance very important.
 
 \subsection{Multi-scale Convolutional Network}
 
-In \cite{farabet} a CNN is created which is scale invariant, for the purpose of scene parsing.  The scene parsing task consist of identifying and labeling the objects making up an image.  In practice means assigning an object class to each pixel e.g. sky, road or person.
+In \cite{farabet} a CNN is created, which is scale invariant, for the purpose of scene parsing.  The scene parsing task consist of identifying and labeling the objects making up an image.  In practice this means assigning an object class to each pixel in the image e.g. sky, road or person.
 
 The importance of scale invariance, in regards to this task, is obvious: it is desirable for a ``small person'', i.e. a person in the background of the image, to be identified as a person even if the training set only contains images where the persons appear in the foreground.
 
-The problem of scale invariance can be solved by extending the concept of weight sharing over locations, to sharing weights over scales.  The weights are shared among different CNNs.  During classification the image is scaled--3 different sizes are used in the paper--and each version is sent to one CNN.  The output feature vector represents the concatenation of the feature vectors from the 3 CNNs.
+The problem of scale invariance can be solved by extending the concept of weight sharing over locations, to sharing weights over scales.  The weights are shared among different CNNs.  During classification the image is scaled--3 different sizes are used in the paper--and each version is sent to one CNN.  The final feature vector represents the concatenation of the feature vectors from the 3 CNNs.
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=\textwidth]{mymscnn.png}
+  \caption{Depiction of generation of feature vector for various scales.}
+  \label{fig:mscn}
+\end{figure}
+
+\newpage
+
+Figure \ref{fig:mscn} shows how feature extraction in the multi-scale convolutional network is done.  The model parameters, $\theta$, is shared between all the networks.
 
 \subsection{Multi-column deep neural network}
-In \cite{ciresan} and \cite{ciresan2} a multi-column deep convolutional network (MCDNN) is used to improve the state-of-the-art on several classification tasks using e.g. the MNIST and NORB dataset.  Traditional CNNs, with randomly initialized weights, are initialized and all of them trained either one the same training sets or distorted variants.  The final classification is done with a democratic vote between the columns.
+In \cite{ciresan} and \cite{ciresan2} a multi-column deep convolutional network (MCDNN) is used to improve the state-of-the-art on several classification tasks, the most famous of which are the MNIST and NORB dataset.  Traditional CNNs, with randomly initialized weights, are created and all of them trained either on the same training sets or distorted variants.  The final classification is done with a democratic vote between the CNNs, referred to as columns in the paper.
 
-Max pooling is used to create a winner-takes-all effect where only the winner neurons receive training.  The authors argue that this represents a biologically plausible mechanism where the ever decreasing number of changes per time interval lead to reduced energy consumption. TODO insert image.
+Max pooling is used to create a winner-take-all effect where only the winner neurons receive training.  The authors argue that this represents a biologically plausible mechanism where the ever decreasing number of changes per time interval lead to reduced energy consumption.
 
-In order to speed up training the entire system is optimized to run on GPUs. The authors estimate that using GPUs leads to an increase in computational power of around 50-100x.  Furthermore, this additional processing power removes the need for pre-training completely.  The network is trained through no other means than an online version of backpropagation (weight updates after each training case).
+In order to speed up training the entire system is optimized to run on a graphics processing unit (GPU), a processor dedicated to rendering graphics. The authors estimate that using GPUs leads to an increase in computational power of around 50-100x.  Furthermore, this additional processing power removes the need for pre-training completely.  The network is trained through no other means than an online version of backpropagation (weight updates after each training case).
 
-This system is the first one able to achieve human-competitive results on the MNIST dataset.  Humans typically reach error levels of 0.2\%, not much better than the 0.23\% achieved by MCDNN.
+This system is the first one able to achieve human-competitive results on the MNIST dataset.  Humans are reported to achieve error levels of 0.2\%, the MCDNN system manages 0.23\%
+
 
 \subsection{Convolutional Deep Belief Network}
 
-In \cite{lee} a convolutional deep belief network is created.\
+In \cite{lee} a convolutional deep belief network is created.  Recall that what separates a deep belief network from other kinds of deep networks is that it is a generative model, able to generate observable data.  There are several reasons that make the combination of convolutional and deep belief networks desirable:
+\begin{itemize}
+ \item The effect of training on unlabeled data is greater in belief networks.
+ \item The lack of mechanisms like weight-sharing and pooling for RBM based deep belief networks makes training on large input images computationally intractable in practice.
+ \item Deep belief networks are able to do inference both top down and bottom up, i.e. they are able to infer missing data.
+\end{itemize}
 
-TODO Write section.
+The building blocks in the deep convolutional belief network is the convolutional RBM (CRBM).  A CRBM is similar to a regular RBM, but with a few key differences:
 
-Uses a Convolutional RBM to make a generative Convolutional belief network.
-Uses probabilistic pooling to make the pooling generative.
+\begin{itemize}
+ \item The hidden layer of the RBM is really two layers:
+   \begin{itemize}
+           \item A \textit{detection layer} which performs convolution.
+            \item A \textit{a pooling layer} which performs pooling.
+          \end{itemize}
+ \item The detection layer has $\mathbf{K}$ groups, made up of $\mathbf{N_H \times N_H}$ hidden units.  And each group has a $\mathbf{N_W \times N_W}$ filter associated with that group.
+ \item To sample from the visible units we use convolution instead of propagating the activation of the input layer.
+\end{itemize}
+
+Max-pooling was only intended for feed-forward architectures so a new variant called probabilistic max-pooling is used.  A regularization step is also used in order to force sparsity, because the model in the paper is overcomplete and does not generalize well without the regularization.
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=\textwidth]{mycdbn.png}
+  \caption{Depiction of a convolutional RBM with probabilistic max pooling.}
+  \label{fig:crbm}
+\end{figure}
+
+\newpage
+
+Figure \ref{fig:crbm} show a CRBM, where $\mathbf{W^k}$ is the k-th filter and $\mathbf{h^k_{i,j}}$ is a hidden unit in the k-th group.
+
+\section{Implementation}
+
+At the very beginning of the semester we wanted to ``implement an RBM, to get familiar with the terminology, and see if we could replicate the results on the MNIST dataset''.  Software engineers are notorious for being unable to estimate how long something is going to take, but our estimate of two weeks of effort, turned out to be several orders of magnitude too low.
+
+The main problem was that the source material we had on hand was entire unsatisfactory, given our background.  The only resources available were scientific papers and an implementation written in Python, where all the code was executed on the GPU.
+
+There is little doubt that we could have implemented the system correctly if we could only understand all the math in the research papers on deep belief networks, or Boltzman machines, but these proofs are well out of our reach.  We had hoped that we could use these networks, and find interesting applications and get some cool results, without understand all the details of how and why they work.
+
+At \href{http://deeplearning.net/tutorial}{deeplearning.net} there is a Python implementation of a DBN using stacked RBMs.  We thought we could reference this code base in order to get answers to any question we had after reading the research papers.  The problem we encountered were two-fold:
+
+\begin{itemize}
+ \item Python is a dynamically typed language.
+ \item Python allows operator overloading.
+ \item The implementation relies heavily on Theano, a library for running code on GPUs.
+\end{itemize}
+
+ANNs are typically implemented using operations on vector and matrices.  Point 1) and 2) meant that we often found ourselves in the following situation, when trying to read the code: is this a scalar, a vector, or a matrix?  In some cases scalar values were even aggregated into vectors just for performance reason (an operation could be performed in parallel on each element of the vector on the GPU).  3) meant we had to dive into, and decipher, code in the GPU library used in order to find out what was really going.
+
+This process was very time consuming, and often we realized, after some time, that we would probably never find the answer we were looking for.
+\subsection{Haskell}
+
+One of the authors had been dabbling with Haskell, a pure, functional language for the better part of a year.  Haskell seemed to be a well-suited language for implementing an RBM, and both authors were eager to explore the world of functional programming--which has received quite a bit of attention lately.  The following properties of Haskell were especially attractive to us in regards to this project:
+\begin{enumerate}
+ \item Haskell is very ``high level'', making it possible to get a lot done with few lines of code.
+ \item Great performance.
+ \item Easy to write highly parallel code, due to immutable data structures, and high quality abstractions for the parallellization of programs.
+ \item Good libraries for matrix multiplication, relevant for implement common operations found in ANNs.
+ \item CUDA/OpenCL bindings (making it possible to perform computations on GPUs).
+\end{enumerate}
+
+We knew we wanted, or at least would benefit greatly from, points 2), 3) and 5) because we wanted to work with large networks and large datasets.  While not unwarranted, these concerns were perhaps a bit premature.
+
+After two weeks time we ended up scrapping Haskell and going with Java.  Java might not be as sexy, but it's a tried and true platform capable of delivering on points 4) and 5), while not being entirely unsatisfactory in regards to points 2) and 3).  Haskell is a very complex language, and many of the abstractions found in the libraries are very complex as well.  We were learning a lot, and having a great time, but had to remind ourselves that his was an project intended for exploring AI, and not programming languages.  Getting everything re-implemented in Java took about two days.  The problem was never how much code we had to write, but what to write in the first place.
+
+\subsection{Results}
+
+We used the MNIST dataset for all the testing.  The MNIST dataset consist of 60 000 training cases, of handwritten digits, and 10 000 test cases.  This is a very large training set and we often used a subset of the dataset, instead of all of it, when we just wanted to debug the system.
+
+All of the results described below are taken from memory, well after the fact, and represents nothing else than the results we obtained while working on implementing and improving the system.  These results do not represent ``good science'', but they were produced consistently by the system and they are all we have.
+
+\subsubsection{A single RBM}
+
+We managed to implement a single RBM, and train it using contrastive divergence on the MNIST dataset.  Training took around 2 minutes per epoch, per layer.  An epoch meaning training on all of the training cases. We initially trained on 10 epochs, but found we could get away with less. When the system was used for classification the best results were had when we only trained for 2 epochs.
+
+This very simple model managed an error rate consistently between 10-15\% on the full MNIST dataset, with 250 hidden nodes.
+
+\subsubsection{Stacked RBMs}
+
+The next step was to see what happened when we stacked two RBMs.  Our initial attempt achieved an error rate of 30\%.  We tried several configurations, the best result was achieved with 3 stacked RBMs and was just above 20\%.
+
+\subsubsection{Softmax Regression}
+
+Some of the papers were read, including the deeplearning tutorial, had a Softmax regression layer at the very top of the artificial neural network.  Softmax regression is just like linear regression, but it is used in situations where the categories are mutually exclusive.  In our case this meant that each example would only have one label, and the probabilities of all the labels would be normalized, so they summed to one.
+
+Softmax regression is full-blown learning algorithm in its own right and when we ran it on the full MNIST dataset we managed an error rate of 7.5\%.
+
+Our best results was obtained when we used one RBM and put a softmax regression layer above it.  We managed an error rate of 6.5\% using this approach.
+
+% BEGIN RECEIVE ORGTBL results
+\begin{table}[htb!]
+\centering
+\begin{tabular}{|l|r|}        \hline
+Approach & Error Rate (\%) \\ \hline
+Single RBM & 10-15 \\         \hline
+Two RBMs & 30\ \\             \hline
+Three RBMs & 20 \\            \hline
+Softmax regression & 7.5 \\   \hline
+RBM + Softmax & 6.5 \\        \hline
+\end{tabular}
+\caption{Results achieved during system implementation.}
+\label{tbl:results}
+\end{table}
+% END RECEIVE ORGTBL results
+\begin{comment}
+#+ORGTBL: SEND results orgtbl-to-latex :splice nil :skip 0
+| Approach           | Error Rate (\%) |
+| Single RBM         |          10-15 |
+| Two RBMs           |            30\ |
+| Three RBMs         |             20 |
+| Softmax regression |            7.5 |
+| RBM + Softmax      |            6.5 |
+\end{comment}
+
+
+\subsection{Discussion}
+
+The results are summarized in table \ref{tbl:results}.  We were very excited when we achieved, what we considered to be, such a low error rate on our first test, using only a single RBM.  Obviously, we were very disappointed, and confused, when the error rate went up as we added more layers.
+
+The idea of course is that each layer is going to present a better and better view of the data to the next layer, making its job easier.  The very last layer would have an easy job of classifying the training cases indeed.
+
+This is one of the major drawbacks of working in computer science: when something does not work as expected, is your approach wrong, or does the system simply contain a bug?  We spent endless amounts of time on code review--how do you even write unit or regression tests for something like this?--but never found any.
+
+Instead we thought maybe we were lacking some critical feature. For instance Hinton, in\cite{hinton06}, makes use of something called a \textit{softmax group}.  A softmax group is a group of units, constrained so only one unit is active.  The softmax group is used to ensure that during training only one label unit is set during reconstruction.  When we tried to implement men this, the error rate equaled chance.  We were never able to figure out if our understanding was wrong, if there was a bug in the implementation, or if the components--picked from different papers and the deeplearning tutorial--simple weren't compatible.
+
+In \cite{hinton06} Hinton says, in his conclusion, that it isn't clear if \textit{fine-tuning} is needed at all, or if, perhaps, the computational resources are better spent training an ensemble of networks or on a larger training set.  This, and similar remarks, led us to believe that the greedy pre-training (contrastive divergence) was the be-all and end-all of training these networks, and that \textit{fine-tuning}, using for instance backpropagation, would only slightly decrease our error rate.  TODO
 
 \section{Conclusion}
 
@@ -412,13 +548,19 @@ Various types of deep neural networks are at the bleeding edge of many classific
 \begin{enumerate}
 \item The ability to train on raw data, avoiding the need for complex feature engineering.
 \item Scalability, combined with the ever-increasing availability of computational resources.
-\item The ability to tackle a diverse range of tasks without use of explicit domain knowledge.
+\item The ability to tackle a diverse range of tasks without relying on domain knowledge.
 \item Performance can be improved, greatly, by doing unsupervised training on readily available unlabeled data.
 \end{enumerate}
 
 We have focused on image processing, partly because we find this application most interesting, but also because the literature itself favors this task.  The reason for this favoritism is not only due to flights of fancy, but because certain mechanisms, like weight-sharing and max-pooling work very well when the input data is contiguous (e.g. as image data is, or a contiguous sound wave).  Another reason is that the imaging tasks represent real challenges due to both the size and high dimensionality of the input data, making the task a worthy research subject.
 
-TODO this ending is a bit abrupt.  Perhaps write some shit about the back and forth between industry and academia.
+In general we can say that the neural networks encountered all excel, to various degrees, on tasks that humans are also good at.  This means they're good at tasks like voice recognition, speech-to-text and vision, but perform very poorly if we try to use them as a calculator.
+
+The obvious value of any improvements to tasks like machine vision has lead to a situation where there is a lot more back and forth between academia and industry than was is usual for AI research.  Google is currently using deep belief networks to power their voice-to-text engine found in the Android operating system.  In \cite{ng} Andrew Ng teamed up with Google to run deep learning, on an object recognition task, using a cluster of 1000 machines for a total for 16000 cores.  The model has one billion connections.
+
+Deep networks also powered Microsoft's recent demonstration of real-time translation of speech, where the speech was synthesized using a model of the speaker's own voice.  The net result was a presentation where the speaker spoke English and the audience heard the speaker speak Chinese, in his own voice.  The demonstration of this technology is well worth a \href{http://www.youtube.com/watch?v=Nu-nlQqFCKg}{look}.
+
+The short distance between theory and practice for this technology, makes it especially interesting to work with.
 
 \bibliographystyle{plain}
 \bibliography{references}
